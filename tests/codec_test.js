@@ -14,12 +14,12 @@ if (process.platform !== 'win32') {
   catch { console.log('SKIP Codec.lua round-trip: python3 is required off Windows.'); process.exit(0); }
 }
 
-const CODEC = path.join(__dirname, '..', 'addon', 'WoWAI', 'Codec.lua');
+const CODEC = path.join(__dirname, '..', 'addon', 'AzerMind', 'Codec.lua');
 const CAPTURE = path.join(__dirname, '..', 'bridge', 'capture.ps1');
 const CAPTURE_X11 = path.join(__dirname, '..', 'bridge', 'capture_x11.py');
 const CAPTURE_MAC = path.join(__dirname, '..', 'bridge', 'capture_mac.py');
 const TMP = path.join(__dirname, 'tmp');
-const CELL = 4, CELLS = 200, MAXROWS = 48;
+const CELL = 4, CELLS = 200, MAXROWS = 96;
 fs.mkdirSync(TMP, { recursive: true });
 
 function encodeWithLua(id, payload) {
@@ -28,7 +28,7 @@ function encodeWithLua(id, payload) {
   const L = lauxlib.luaL_newstate();
   lualib.luaL_openlibs(L);
   const code = fs.readFileSync(CODEC, 'utf8') +
-    `\nlocal cells, n = WoWAI_Codec.Encode(${id}, ${lit})\n` +
+    `\nlocal cells, n = AzerMind_Codec.Encode(${id}, ${lit})\n` +
     `local t = {}\nfor i = 1, #cells do t[i] = string.format("%d", cells[i]) end\n` +
     `RESULT = table.concat(t, ",")\n`;
   if (lauxlib.luaL_dostring(L, to_luastring(code)) !== 0) {
@@ -61,7 +61,7 @@ function png(width, height, rgb) {
 
 // Pure-primary cells, random noise, and a gamma curve like the in-game sliders.
 function render(cells, jitter, gamma) {
-  const W = CELLS * CELL, H = MAXROWS * CELL;
+  const W = CELLS * CELL, H = Math.ceil(cells.length / CELLS) * CELL;
   const rgb = Buffer.alloc(W * H * 3, 0x30);
   cells.forEach((v, i) => {
     const c = i % CELLS, r = Math.floor(i / CELLS);
@@ -90,6 +90,9 @@ function decode(file) {
 }
 
 const cases = [
+  { id: 2392, payload: "x".repeat(2392), jitter: 60, gamma: 1 },
+  { id: 4362, payload: 'x'.repeat(4362), jitter: 60, gamma: 1 },
+  { id: 6400, payload: 'x'.repeat(6400), jitter: 60, gamma: 1 },
   { id: 7, payload: 'sess1\x1Fchat1\x1F7\x1FC:\\Users\\me\\proj\x1F\x1Fname\x1Fhéllo wörld ✓ — "quotes" & \\backslash\\ end', jitter: 0, gamma: 1 },
   { id: 4242, payload: 'sess1\x1Fchat1\x1F4242\x1FC:\\x\x1Fn\x1F\x1F' + 'Refactor the player controller so jumping feels less floaty. '.repeat(40), jitter: 60, gamma: 0.6 },
   { id: 9, payload: 'sess1\x1Fchat1\x1F9\x1FC:\\x\x1F\x1F\x1F' + 'a fairly long paste: '.repeat(140), jitter: 100, gamma: 1.8 },

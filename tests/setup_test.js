@@ -12,7 +12,7 @@ const REPO = path.join(__dirname, '..');
 
 // A copy of the code (setup.js works next to itself) and an empty install tree.
 function sandbox(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wowai-setup-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'azermind-setup-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const repo = path.join(dir, 'repo');
   fs.mkdirSync(path.join(repo, 'bridge'), { recursive: true });
@@ -21,6 +21,12 @@ function sandbox(t) {
   for (const f of fs.readdirSync(path.join(REPO, 'bridge'))) {
     if (f.endsWith('.js') || f === 'config.example.json') fs.copyFileSync(path.join(REPO, 'bridge', f), path.join(repo, 'bridge', f));
   }
+  // Keep the 200 slots under test, but avoid creating thousands of unrelated
+  // heartbeat files for each temporary client tree.
+  const examplePath=path.join(repo,'bridge','config.example.json');
+  const example=JSON.parse(fs.readFileSync(examplePath));
+  example.actMax=1; example.presenceMax=2;
+  fs.writeFileSync(examplePath,JSON.stringify(example));
   return { repo, wow: path.join(dir, 'World of Warcraft') };
 }
 
@@ -37,14 +43,14 @@ function client(s, flavor, exe, account) {
 function setup(s, ...args) {
   // Replaces the search list outright: this must never find a real game on the
   // machine running the tests (it would install into it).
-  const env = { ...process.env, WOWAI_TEST_WOW_ROOT: s.wow };
+  const env = { ...process.env, AZERMIND_TEST_WOW_ROOT: s.wow };
   const r = spawnSync(process.execPath, ['setup.js', '--project', '.', ...args], { cwd: s.repo, env, encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout + r.stderr);
   return r.stdout;
 }
 
 const config = s => JSON.parse(fs.readFileSync(path.join(s.repo, 'bridge', 'config.json'), 'utf8'));
-const slots = dir => fs.readdirSync(path.join(dir, 'Interface', 'AddOns')).filter(n => /^WoWAI_S\d{3}$/.test(n)).length;
+const slots = dir => fs.readdirSync(path.join(dir, 'Interface', 'AddOns')).filter(n => /^AzerMind_S\d{3}$/.test(n)).length;
 
 test('a fresh install prefers Forever over a leftover beta folder', t => {
   const s = sandbox(t);
@@ -53,10 +59,15 @@ test('a fresh install prefers Forever over a leftover beta folder', t => {
   setup(s);
   const cfg = config(s);
   assert.equal(cfg.addonDir, path.join(forever, 'Interface', 'AddOns'));
-  assert.equal(cfg.inboxFile, path.join(forever, 'Interface', 'AddOns', 'WoWAI', 'Inbox.lua'));
-  assert.equal(cfg.savedVariablesFile, path.join(forever, 'WTF', 'Account', '1#1', 'SavedVariables', 'WoWAI.lua'));
+  assert.equal(cfg.inboxFile, path.join(forever, 'Interface', 'AddOns', 'AzerMind', 'Inbox.lua'));
+  assert.equal(cfg.savedVariablesFile, path.join(forever, 'WTF', 'Account', '1#1', 'SavedVariables', 'AzerMind.lua'));
   assert.equal(cfg.capture.processName, 'Wow');
   assert.equal(slots(forever), 200);
+  assert.ok(fs.existsSync(path.join(forever, 'Interface', 'AddOns', 'AzerMind_Data', 'AzerMind_Data.toc')), 'bundled catalog is installed alongside the addon');
+  for(const part of ['ItemDetails','QuestDetails','World']) {
+    const name='AzerMind_Data_'+part;
+    assert.ok(fs.existsSync(path.join(forever,'Interface','AddOns',name,name+'.toc')), 'lazy module '+name+' is installed');
+  }
   assert.equal(slots(beta), 0);
 });
 
@@ -110,5 +121,36 @@ test('setup installs before the first login and fills the account in later', t =
 
   fs.mkdirSync(path.join(forever, 'WTF', 'Account', '1#1', 'SavedVariables'), { recursive: true });
   setup(s);
-  assert.equal(config(s).savedVariablesFile, path.join(forever, 'WTF', 'Account', '1#1', 'SavedVariables', 'WoWAI.lua'));
+  assert.equal(config(s).savedVariablesFile, path.join(forever, 'WTF', 'Account', '1#1', 'SavedVariables', 'AzerMind.lua'));
+});
+
+test('WoW AI migration preserves original data, upgrades paths and disables old entry points', t => {
+  const s = sandbox(t);
+  const game = client(s, '_forever_', 'Wow.exe', '1#1');
+  const saved = path.join(game, 'WTF', 'Account', '1#1', 'SavedVariables');
+  const oldData = 'WoWAIDB = { chats = { "keep my conversation" } }\nWoWAIMapDB = {}\nWoWAIItemsDB = {}\n';
+  fs.writeFileSync(path.join(saved, 'WoWAI.lua'), oldData);
+  const oldAddon = path.join(game, 'Interface', 'AddOns', 'WoWAI');
+  fs.mkdirSync(oldAddon);
+  fs.writeFileSync(path.join(oldAddon, 'WoWAI.toc'), '## Title: WoW AI');
+  const cfg = JSON.parse(fs.readFileSync(path.join(s.repo, 'bridge', 'config.example.json')));
+  cfg.addonDir = path.join(game, 'Interface', 'AddOns');
+  cfg.inboxFile = path.join(oldAddon, 'Inbox.lua');
+  cfg.savedVariablesFile = path.join(saved, 'WoWAI.lua');
+  cfg.defaultCwd = 'keep-workspace';
+  fs.writeFileSync(path.join(s.repo, 'bridge', 'config.json'), JSON.stringify(cfg));
+  setup(s);
+  assert.equal(fs.readFileSync(path.join(saved, 'WoWAI.lua'), 'utf8'), oldData);
+  const migrated = fs.readFileSync(path.join(saved, 'AzerMind.lua'), 'utf8');
+  assert.match(migrated, /AzerMindDB =/);
+  assert.match(migrated, /AzerMindMapDB =/);
+  assert.match(migrated, /AzerMindItemsDB =/);
+  assert.match(migrated, /keep my conversation/);
+  assert.ok(fs.existsSync(path.join(oldAddon, 'WoWAI.toc.disabled')));
+  assert.equal(config(s).inboxFile, path.join(game, 'Interface', 'AddOns', 'AzerMind', 'Inbox.lua'));
+  assert.equal(config(s).savedVariablesFile, path.join(saved, 'AzerMind.lua'));
+  assert.equal(config(s).defaultCwd, 'keep-workspace');
+  fs.writeFileSync(path.join(saved, 'AzerMind.lua'), 'AzerMindDB = { newer = true }');
+  setup(s);
+  assert.match(fs.readFileSync(path.join(saved, 'AzerMind.lua'), 'utf8'), /newer = true/);
 });

@@ -1,5 +1,5 @@
 # Screen-captures the top-left corner of the WoW client window and decodes the
-# WoWAI pixel strip (see Codec.lua in the addon). Prints one JSON line per
+# AzerMind pixel strip (see Codec.lua in the addon). Prints one JSON line per
 # new message to stdout. Started by bridge.js; can also be run by hand.
 #
 #   capture.ps1 -TestImage strip.png    decode a PNG once and exit (used by tests)
@@ -7,7 +7,7 @@
 param(
   [int]$Cell = 4,
   [int]$Cells = 200,
-  [int]$MaxRows = 48,
+  [int]$MaxRows = 96,
   [int]$IntervalMs = 250,
   [string]$ProcessName = "Wow",
   [string]$ClientFolder = "",

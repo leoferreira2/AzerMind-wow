@@ -1,5 +1,5 @@
--- WoWAI map: layers the agent draws (routes, quest stops, marks), synced from the
--- bridge, plus herb and ore locations from the optional WoWAI_Nodes addon.
+-- AzerMind map: layers the agent draws (routes, quest stops, marks), synced from the
+-- bridge, plus herb and ore locations from the optional AzerMind_Nodes addon.
 --
 -- Layers arrive in slot files as { epoch, version, layers = { { name, title,
 -- ordered, loop, points = { { uiMapID, x, y, label, kind }, ... } } } }; x/y are
@@ -9,7 +9,7 @@
 
 local ADDON_NAME = ...
 local M = {}
-WoWAIMap = M
+AzerMindMap = M
 
 local ARRIVE_YARDS = 12
 local NODE_SIZE, PIN_SIZE = 9, 16
@@ -25,7 +25,7 @@ local KIND_COLOR = {
 	flight = { 0.55, 0.75, 1 }, poi = { 1, 1, 1 },
 }
 
-local mdb -- WoWAIMapDB: { map, hidden = { [layer] = true }, nodes = { ore, herb, filter }, nav = { layer, index }, navPos }
+local mdb -- AzerMindMapDB: { map, hidden = { [layer] = true }, nodes = { ore, herb, filter }, nav = { layer, index }, navPos }
 
 local function Try(fn, ...)
 	if type(fn) ~= "function" then return nil end
@@ -34,13 +34,13 @@ local function Try(fn, ...)
 end
 
 local function Print(msg)
-	print("|cff66ccff[WoW AI map]|r " .. msg)
+	print("|cff66ccff[AzerMind map]|r " .. msg)
 end
 
 local function DB()
 	if not mdb then
-		WoWAIMapDB = WoWAIMapDB or {}
-		mdb = WoWAIMapDB
+		AzerMindMapDB = AzerMindMapDB or {}
+		mdb = AzerMindMapDB
 		mdb.hidden = mdb.hidden or {}
 		mdb.nodes = mdb.nodes or { ore = false, herb = false, filter = "skill" }
 	end
@@ -49,7 +49,10 @@ end
 
 local function Layers()
 	local m = DB().map
-	return m and m.layers or {}
+	local result = {}
+	for _, layer in ipairs(m and m.layers or {}) do result[#result+1]=layer end
+	for _, layer in pairs(DB().questMarks or {}) do result[#result+1]=layer end
+	return result
 end
 
 local function FindLayer(name)
@@ -212,7 +215,7 @@ end
 local SKILL_IDS = { mining = 186, herbalism = 182 }
 local SKILL_NAMES = { mining = MINING or "Mining", herbalism = HERBALISM or "Herbalism" }
 local function SkillRank(prof)
-	local lines = WoWAI and WoWAI.SkillLines and WoWAI.SkillLines() or {}
+	local lines = AzerMind and AzerMind.SkillLines and AzerMind.SkillLines() or {}
 	for _, sk in ipairs(lines) do
 		if not sk.isHeader and (sk.skillID == SKILL_IDS[prof] or sk.name == SKILL_NAMES[prof]) then return sk.rank end
 	end
@@ -227,7 +230,7 @@ local function NodeFilter()
 end
 
 local function DrawNodes(mapID, scale)
-	local data = WoWAINodes
+	local data = AzerMindNodes
 	local want, filter = NodeFilter()
 	if not data or not next(want) then return end
 	local perMap = data.maps and data.maps[mapID]
@@ -292,7 +295,7 @@ function M.Refresh()
 					local current = nav and nav.layer == l.name and nav.index == i
 					b.dot:SetVertexColor(color[1], color[2], color[3], 1)
 					b.ring:SetVertexColor(current and 1 or 0, current and 1 or 0, current and 1 or 0, 0.9)
-					b.num:SetText(l.ordered and tostring(i) or "")
+					b.num:SetText(l.questID and "X" or l.ordered and tostring(i) or "")
 					b:SetFrameLevel(overlay:GetFrameLevel() + (current and 20 or 10))
 					b.info = { title = l.title, label = p[4] ~= "" and p[4] or l.name, layer = l.name, index = i, hint = "Click: navigate here" }
 					Place(b, x, y, scale)
@@ -342,8 +345,8 @@ local function NavPoint()
 end
 
 local function BuildNavigator()
-	nav = CreateFrame("Frame", "WoWAINavigator", UIParent, "BackdropTemplate")
-	nav:SetSize(250, 44)
+	nav = CreateFrame("Frame", "AzerMindNavigator", UIParent, "BackdropTemplate")
+	nav:SetSize(300, 78)
 	nav:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", tile = true, tileSize = 16, edgeSize = 12, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
 	nav:SetBackdropColor(0, 0, 0, 0.7)
 	local p = DB().navPos
@@ -362,22 +365,32 @@ local function BuildNavigator()
 	end)
 	nav.arrow = nav:CreateTexture(nil, "ARTWORK")
 	nav.arrow:SetSize(34, 34)
-	nav.arrow:SetPoint("LEFT", 6, 0)
+	nav.arrow:SetPoint("TOPLEFT", 6, -6)
 	nav.arrow:SetTexture(ARROW)
+	local function NavButton(name,label,x,action)
+		local button
+		if AzerMindTheme then button=AzerMindTheme.Button(nav,label,88,26,action)
+		else button=CreateFrame("Button",nil,nav,"UIPanelButtonTemplate"); button:SetSize(88,26); button:SetText(label); button:SetScript("OnClick",action) end
+		button:SetPoint("BOTTOMLEFT",nav,"BOTTOMLEFT",x,6); nav[name]=button
+	end
+	NavButton("previous","Previous",8,function() M.Step(-1) end)
+	NavButton("next","Next",106,function() M.Step(1) end)
+	NavButton("stop","Stop",204,function() M.Stop() end)
 	nav.title = nav:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	nav.title:SetPoint("TOPLEFT", 46, -7)
 	nav.title:SetPoint("RIGHT", -8, 0)
 	nav.title:SetJustifyH("LEFT")
 	nav.title:SetWordWrap(false)
 	nav.text = nav:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	nav.text:SetPoint("BOTTOMLEFT", 46, 8)
+	nav.text:SetPoint("TOPLEFT", 46, -26)
 	nav.text:SetPoint("RIGHT", -8, 0)
 	nav.text:SetJustifyH("LEFT")
 	nav.text:SetWordWrap(false)
 	nav:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
 		GameTooltip:AddLine("Route")
-		GameTooltip:AddLine("Drag to move, right-click to skip this stop. /wow-ai map for options.", 1, 1, 1, true)
+		GameTooltip:AddLine("Previous/Next changes the destination. Stop ends navigation. Drag to move; right-click also skips this stop.", 1, 1, 1, true)
+		GameTooltip:AddLine("Map markers: numbers = route stops; X = quest destination; resource markers = gathering nodes. Hover a marker for its name.", 1, 1, 1, true)
 		GameTooltip:Show()
 	end)
 	nav:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -395,6 +408,7 @@ function M.UpdateNavigator()
 	if not l then if nav then nav:Hide() end return end
 	if not nav then BuildNavigator() end
 	nav:Show()
+	nav.previous:SetEnabled(i>1 or l.loop)
 	nav.title:SetText(string.format("%d/%d  %s", i, #l.points, p[4] ~= "" and p[4] or l.title))
 	local dist, bearing = Heading(p)
 	if not dist and type(bearing) == "string" then
@@ -445,6 +459,42 @@ function M.Step(delta, arrived)
 	if not arrived then M.UpdateNavigator() end
 end
 
+function M.MarkQuest(id, title, point)
+	if type(point) ~= "table" or type(point[1]) ~= "number" or not Try(C_Map.GetMapInfo,point[1]) then return false, "Unknown map for this location." end
+	for i=2,3 do if type(point[i])~="number" or point[i]~=point[i] or point[i]<0 or point[i]>100 then return false,"Invalid coordinates." end end
+	local db=DB(); db.questMarks=db.questMarks or {}
+	local key="quest:"..tostring(id)
+	db.questMarks[tostring(id)]={name=key,title=title,questID=id,points={{point[1],point[2],point[3],point[4] or title,"quest"}}}
+	db.hidden[key]=nil
+	M.Navigate(key,1)
+	-- Use the client's own minimap waypoint only when that feature is available.
+	if C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates and Try(C_Map.CanSetUserWaypointOnMap,point[1]) then
+		local waypoint=Try(UiMapPoint.CreateFromCoordinates,point[1],point[2]/100,point[3]/100)
+		if waypoint then
+			local ok=pcall(C_Map.SetUserWaypoint,waypoint)
+			if ok then db.questWaypoint={id=id,map=point[1],x=point[2]/100,y=point[3]/100}; Try(C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint,true) end
+		end
+	end
+	if not WorldMapFrame then Try(C_AddOns and C_AddOns.LoadAddOn,"Blizzard_WorldMap") end
+	SetupWorldMap(); M.Refresh()
+	if WorldMapFrame and WorldMapFrame.SetMapID then
+		Try(WorldMapFrame.Show,WorldMapFrame); Try(WorldMapFrame.SetMapID,WorldMapFrame,point[1]); M.Refresh()
+	end
+	return true
+end
+function M.RemoveQuestMark(id)
+	local db=DB(); local key="quest:"..tostring(id)
+	local own=db.questWaypoint
+	if own and own.id==id then
+		local current=Try(C_Map.GetUserWaypoint)
+		if current and current.uiMapID==own.map and current.position and current.position.x==own.x and current.position.y==own.y then Try(C_Map.ClearUserWaypoint) end
+		db.questWaypoint=nil
+	end
+	if db.questMarks then db.questMarks[tostring(id)]=nil end
+	if db.nav and db.nav.layer==key then M.Stop() end
+	db.hidden[key]=nil; M.Refresh()
+end
+
 function M.Stop()
 	DB().nav = nil
 	M.UpdateNavigator()
@@ -493,7 +543,7 @@ function M.Sync(m)
 end
 
 ---------------------------------------------------------------------------
--- /wow-ai map (and /aimap)
+-- /azermind map (and /aimap)
 ---------------------------------------------------------------------------
 
 local function Status()
@@ -503,8 +553,8 @@ local function Status()
 		Print(string.format("%s%s|r  %s (%d point(s))%s", mdb.hidden[l.name] and "|cff888888" or "|cffffffff", l.name, l.title or "", #l.points, (mdb.nav and mdb.nav.layer == l.name) and string.format("  navigating %d/%d", mdb.nav.index, #l.points) or ""))
 	end
 	local n = mdb.nodes
-	Print(string.format("nodes: ore %s, herb %s, filter %s%s", n.ore and "on" or "off", n.herb and "on" or "off", n.filter, WoWAINodes and "" or "  (WoWAI_Nodes data addon not installed)"))
-	Print("commands: /wow-ai map ore|herb [on|off], filter all|skill, show|hide <layer>, nav <layer> [n], next, prev, stop  (/aimap is the same)")
+	Print(string.format("nodes: ore %s, herb %s, filter %s%s", n.ore and "on" or "off", n.herb and "on" or "off", n.filter, AzerMindNodes and "" or "  (AzerMind_Nodes data addon not installed)"))
+	Print("commands: /azermind map ore|herb [on|off], filter all|skill, show|hide <layer>, nav <layer> [n], next, prev, stop  (/aimap is the same)")
 end
 
 function M.Command(msg)
@@ -534,8 +584,8 @@ function M.Command(msg)
 	else Status() end
 end
 
-SLASH_WOWAIMAP1 = "/aimap"
-SlashCmdList["WOWAIMAP"] = M.Command
+SLASH_AZERMINDMAP1 = "/aimap"
+SlashCmdList["AZERMINDMAP"] = M.Command
 
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("ADDON_LOADED")

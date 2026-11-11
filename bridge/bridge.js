@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// WoW AI bridge: the half of WoWAI that lives outside the game.
+// AzerMind bridge: the half of AzerMind that lives outside the game.
 //
 //   OUT  capture.ps1 screen-captures the addon's pixel strip -> one or more
 //        {session, chat, id, cwd, flags, text} records per frame
@@ -9,7 +9,7 @@
 //        in the chat's folder, streaming progress. Each chat is its own agent
 //        session; up to maxParallel run at once.
 //   IN   we write the latest reply/status of every chat into every
-//        WoWAI_S### slot addon (the game loads a fresh one from a timer),
+//        AzerMind_S### slot addon (the game loads a fresh one from a timer),
 //        flip a signal .wav per message, and also write Inbox.lua for the
 //        reload path.
 //
@@ -20,8 +20,8 @@
 //   --project <dir>   default folder for chats that haven't picked one
 //
 // Like the agent CLIs themselves, the bridge works in the folder it was started
-// from: `cd my-project && wow-ai` makes my-project the default for every chat
-// that hasn't chosen its own with /wow-ai cd. Started from inside this repo (npm
+// from: `cd my-project && azermind` makes my-project the default for every chat
+// that hasn't chosen its own with /azermind cd. Started from inside this repo (npm
 // start), it falls back to defaultCwd in config.json.
 
 const fs = require('fs');
@@ -30,6 +30,10 @@ const readline = require('readline');
 const { spawn } = require('child_process');
 const P = require('./protocol'); // the pure protocol code, unit-tested in tests/bridge_test.js
 const A = require('./agents');   // how each agent is launched and read, unit-tested in tests/agents_test.js
+const CodexSettings = require('./codex-settings');
+const Wowhead = require('./wowhead');
+let codexModels = CodexSettings.catalog();
+const ModelCatalogs = require('./model-catalogs');
 
 const HERE = __dirname;
 const CONFIG_FILE = path.join(HERE, 'config.json');
@@ -39,18 +43,19 @@ const TMP_DIR = path.join(HERE, 'tmp'); // prompt files for agents that read the
 
 const argv = process.argv.slice(2);
 if (argv.includes('--help') || argv.includes('-h')) {
-  console.log('wow-ai [--project <dir>] [--once] [--inject "text" [--agent <id>]]\n\n' +
-    'Runs the WoW AI bridge. Chats without a folder of their own work in <dir>,\n' +
+  console.log('azermind [--project <dir>] [--once] [--inject "text" [--agent <id>]]\n\n' +
+    'Runs the AzerMind bridge. Chats without a folder of their own work in <dir>,\n' +
     'or in the folder you started it from, or in defaultCwd from bridge/config.json.\n' +
-    `Agents: ${A.agentIds().join(', ')} (the default is "agent" in config.json; chats pick with /wow-ai agent).`);
+    `Agents: ${A.agentIds().join(', ')} (the default is "agent" in config.json; chats pick with /azermind agent).`);
   process.exit(0);
 }
 let cfg;
 try { cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')); }
 catch (e) {
-  console.error(`Cannot read ${CONFIG_FILE} (${e.message}).\nRun "node setup.js" in the wow-ai folder first.`);
+  console.error(`Cannot read ${CONFIG_FILE} (${e.message}).\nRun "node setup.js" in the azermind folder first.`);
   process.exit(2); // the supervisor doesn't restart on 2
 }
+const modelCatalogs=ModelCatalogs.createCatalogs(() => cfg, {cacheFile:path.join(HERE,'model-catalog-cache.json')});
 const once = argv.includes('--once');
 const injectIdx = argv.indexOf('--inject');
 const inject = injectIdx >= 0 ? argv[injectIdx + 1] : null;
@@ -58,7 +63,7 @@ const agentIdx = argv.indexOf('--agent');
 const injectAgent = agentIdx >= 0 ? argv[agentIdx + 1] : '';
 const exitWhenIdle = once || inject !== null;
 
-// The agent chats use unless they pick their own (/wow-ai agent, "agent=" flag).
+// The agent chats use unless they pick their own (/azermind agent, "agent=" flag).
 const DEFAULT_AGENT = A.normalizeAgent(cfg.agent || A.DEFAULT_AGENT);
 if (!DEFAULT_AGENT) {
   console.error(`"agent": "${cfg.agent}" in ${CONFIG_FILE} is not one of ${A.agentIds().join(', ')}.`);
@@ -75,10 +80,10 @@ function insideRepo(dir) {
 const projectIdx = argv.indexOf('--project');
 const DEFAULT_CWD = path.resolve(
   projectIdx >= 0 && argv[projectIdx + 1] ? argv[projectIdx + 1]
-    : process.env.WOW_AI_PROJECT ? process.env.WOW_AI_PROJECT
+    : process.env.AZERMIND_PROJECT ? process.env.AZERMIND_PROJECT
     : !insideRepo(process.cwd()) ? process.cwd()
     : cfg.defaultCwd || process.cwd());
-const DEFAULT_CWD_SOURCE = projectIdx >= 0 ? '--project' : process.env.WOW_AI_PROJECT ? 'WOW_AI_PROJECT'
+const DEFAULT_CWD_SOURCE = projectIdx >= 0 ? '--project' : process.env.AZERMIND_PROJECT ? 'AZERMIND_PROJECT'
   : !insideRepo(process.cwd()) ? 'started here' : 'config.json';
 
 const resolveCwd = raw => P.resolveCwd(raw, DEFAULT_CWD);
@@ -94,11 +99,11 @@ function siblingFolders() {
 
 const SLOTS = cfg.slots || 200;
 const MAX_PARALLEL = cfg.maxParallel || 3;
-const cap = Object.assign({ enabled: true, processName: 'Wow', cellPx: 4, cellsPerRow: 200, maxRows: 48, intervalMs: 250 }, cfg.capture || {});
+const cap = Object.assign({ enabled: true, processName: 'Wow', cellPx: 4, cellsPerRow: 200, maxRows: 96, intervalMs: 250 }, cfg.capture || {});
 // The game-side files. A config.json written for the addon's old name
 // (WoWClaude) still works: the paths are derived from addonDir instead.
-const INBOX_FILE = cfg.inboxFile && !/WoWClaude/.test(cfg.inboxFile) ? cfg.inboxFile : path.join(cfg.addonDir || '', 'WoWAI', 'Inbox.lua');
-let SAVED_VARS = String(cfg.savedVariablesFile || '').replace(/WoWClaude\.lua$/, 'WoWAI.lua');
+const INBOX_FILE = cfg.inboxFile && !/WoWClaude/.test(cfg.inboxFile) ? cfg.inboxFile : path.join(cfg.addonDir || '', 'AzerMind', 'Inbox.lua');
+let SAVED_VARS = String(cfg.savedVariablesFile || '').replace(/WoWClaude\.lua$/, 'AzerMind.lua');
 // The client folder holding the AddOns folder.
 const CLIENT_DIR = cfg.addonDir ? path.dirname(path.dirname(cfg.addonDir)) : '';
 
@@ -109,7 +114,7 @@ function findSavedVars() {
   const base = path.join(CLIENT_DIR, 'WTF', 'Account');
   try {
     const account = fs.readdirSync(base, { withFileTypes: true }).find(d => d.isDirectory() && d.name !== 'SavedVariables');
-    if (account) SAVED_VARS = path.join(base, account.name, 'SavedVariables', 'WoWAI.lua');
+    if (account) SAVED_VARS = path.join(base, account.name, 'SavedVariables', 'AzerMind.lua');
   } catch {}
 }
 
@@ -290,15 +295,15 @@ function takeMapCommands(job, text) {
 // Slot file / Inbox.lua body: see protocol.luaTable.
 function slotFile(globalName, records, urgent = true) {
   const map = Date.now() < mapShareUntil && (urgent || mapLuaSize() <= MAP_PROGRESS_MAX) ? state.map : null;
-  return P.luaTable(globalName, records, { cwd: DEFAULT_CWD, restore: pendingRestore, agent: DEFAULT_AGENT, agents: A.agentIds(), map });
+  return P.luaTable(globalName, records, { cwd: DEFAULT_CWD, restore: pendingRestore, agent: cfg.agent || DEFAULT_AGENT, agents: A.agentIds(), map, codexModels, agentSettings: modelCatalogs.snapshot(), aiDefaults: { agent: cfg.agent || DEFAULT_AGENT, model: A.agentConfig(cfg, cfg.agent || DEFAULT_AGENT).model || '', reasoning: A.agentConfig(cfg, cfg.agent || DEFAULT_AGENT).reasoning || '' } });
 }
 
 function addonInstalled() {
-  return fs.existsSync(path.join(cfg.addonDir, 'WoWAI', 'WoWAI.toc'));
+  return fs.existsSync(path.join(cfg.addonDir, 'AzerMind', 'AzerMind.toc'));
 }
 
 function slotsInstalled() {
-  return fs.existsSync(path.join(cfg.addonDir, 'WoWAI_S001', 'Inbox.lua'));
+  return fs.existsSync(path.join(cfg.addonDir, 'AzerMind_S001', 'Inbox.lua'));
 }
 
 // The game will load *some* unused slot next, so every slot gets the full picture.
@@ -310,7 +315,7 @@ function publishNow(urgent = true) {
   lastPublish = Date.now();
   const records = [...live.values()].slice(-30);
   try {
-    atomicWrite(INBOX_FILE, slotFile('WoWAI_Inbox', records, urgent));
+    atomicWrite(INBOX_FILE, slotFile('AzerMind_Inbox', records, urgent));
   } catch (e) {
     if (!warnedNoAddon) {
       warnedNoAddon = true;
@@ -319,9 +324,9 @@ function publishNow(urgent = true) {
     return;
   }
   if (!slotsInstalled()) return;
-  const body = slotFile('WoWAI_SlotData', records, urgent);
+  const body = slotFile('AzerMind_SlotData', records, urgent);
   for (let i = 1; i <= SLOTS; i++) {
-    try { atomicWrite(path.join(cfg.addonDir, 'WoWAI_S' + pad3(i), 'Inbox.lua'), body); } catch {}
+    try { atomicWrite(path.join(cfg.addonDir, 'AzerMind_S' + pad3(i), 'Inbox.lua'), body); } catch {}
   }
   // The restore bundle is large; it rides along once and is then dropped.
   // (The game keeps loading fresh slots until it has read one carrying it.)
@@ -339,7 +344,7 @@ function publish(key, record, urgent) {
 }
 
 function signal(kind, id, on) {
-  const file = path.join(cfg.addonDir, 'WoWAI', kind, pad3(slotNumber(id)) + '.wav');
+  const file = path.join(cfg.addonDir, 'AzerMind', kind, pad3(slotNumber(id)) + '.wav');
   try { atomicWrite(file, on ? SILENT_WAV : Buffer.alloc(0)); } catch {}
 }
 
@@ -348,7 +353,7 @@ function signal(kind, id, on) {
 // without spending a reply slot.
 const ACT_MAX = cfg.actMax || 60;
 function actFile(id, k) {
-  return path.join(cfg.addonDir, 'WoWAI', 'act', pad3(slotNumber(id)), String(k).padStart(2, '0') + '.wav');
+  return path.join(cfg.addonDir, 'AzerMind', 'act', pad3(slotNumber(id)), String(k).padStart(2, '0') + '.wav');
 }
 function resetBeats(id) {
   for (let k = 1; k <= ACT_MAX; k++) { try { atomicWrite(actFile(id, k), Buffer.alloc(0)); } catch {} }
@@ -365,10 +370,10 @@ function beat(job) {
 // files just ahead of the counter are kept empty so the game can't run ahead.
 const PRESENCE_MAX = cfg.presenceMax || 2000;
 function presenceFile(k) {
-  return path.join(cfg.addonDir, 'WoWAI', 'presence', String(k).padStart(4, '0') + '.wav');
+  return path.join(cfg.addonDir, 'AzerMind', 'presence', String(k).padStart(4, '0') + '.wav');
 }
 function presenceBeat() {
-  if (!fs.existsSync(path.join(cfg.addonDir, 'WoWAI', 'presence'))) return;
+  if (!fs.existsSync(path.join(cfg.addonDir, 'AzerMind', 'presence'))) return;
   state.presence = ((state.presence || 0) % PRESENCE_MAX) + 1;
   const k = state.presence;
   try { atomicWrite(presenceFile(k), SILENT_WAV); } catch {}
@@ -448,7 +453,61 @@ function allowRules(agentId, rules) {
 // ---------------------------------------------------------------------------
 
 function submit(job) {
-  if (alreadyHandled(job)) return;
+  if (job.cancel) {
+    const key = chatKey(job);
+    const active = running.get(key);
+    markHandled({ ...job, id: job.cancel });
+    if (queued.get(key)?.id === job.cancel) queued.delete(key);
+    if (active && active.job.id === job.cancel) {
+      active.child.wowCancelled = true;
+      killTree(active.child);
+      running.delete(key);
+    }
+    saveState();
+    publish('control:' + key, { chat: job.chat, id: job.id, status: 'cancel-ack', text: '', session: job.session }, true);
+    drainQueue();
+    return;
+  }
+  if (job.settings) {
+    const receiptKey = `${job.session}:${job.id}`;
+    state.settingResults = state.settingResults || {};
+    let receipt = state.settingResults[receiptKey];
+    if (!receipt) {
+      try {
+        const request = JSON.parse(job.text);
+        if (request.action === 'refresh-models') {
+          modelCatalogs.refresh().then(() => {
+            codexModels=CodexSettings.catalog();
+            const result={chat:job.chat,id:job.id,status:'models-refreshed',text:'Model choices refreshed.',session:job.session};
+            state.settingResults[receiptKey]=result;
+            const keys=Object.keys(state.settingResults);
+            for (const key of keys.slice(0,Math.max(0,keys.length-100))) delete state.settingResults[key];
+            saveState(); publish('models:'+chatKey(job),result,true);
+          }).catch(() => {
+            publish('models:'+chatKey(job),{chat:job.chat,id:job.id,status:'models-error',text:'Could not refresh. Existing choices were kept.',session:job.session},true);
+          });
+          return;
+        }
+        const updated = CodexSettings.defaults(JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')), request, codexModels, A.agentIds(), modelCatalogs.snapshot());
+        atomicWrite(CONFIG_FILE, JSON.stringify(updated, null, 2) + '\n');
+        cfg.agent = updated.agent;
+        cfg.agents = updated.agents;
+        receipt = { chat: job.chat, id: job.id, status: 'settings-saved', text: 'Default settings saved.', session: job.session };
+      } catch (e) {
+        receipt = { chat: job.chat, id: job.id, status: 'settings-error', text: String(e.message), session: job.session };
+      }
+      state.settingResults[receiptKey] = receipt;
+      const keys = Object.keys(state.settingResults);
+      for (const key of keys.slice(0, Math.max(0, keys.length - 100))) delete state.settingResults[key];
+      saveState();
+    }
+    publish('settings:' + chatKey(job), receipt, true);
+    return;
+  }
+  if (alreadyHandled(job)) {
+    if (job.forget) publish(chatKey(job), { chat: job.chat, id: job.id, status: 'ack', text: '', session: job.session }, true);
+    return;
+  }
   if (job.ctx !== undefined) setContext(job);
   if (job.forget) {
     // A deleted chat: forget it and ack. No agent run.
@@ -456,6 +515,7 @@ function submit(job) {
     forgetChat(job);
     saveState();
     signal('ack', job.id, true);
+    publish(chatKey(job), { chat: job.chat, id: job.id, status: 'ack', text: '', session: job.session }, true);
     return;
   }
   if (job.hello) {
@@ -507,20 +567,24 @@ function runJob(job) {
     finish(job, 'error', `Folder does not exist: ${cwd}\n` +
       `Paths are relative to ${DEFAULT_CWD}.` +
       (sibs.length ? `\nFolders there: ${sibs.join(', ')}` : '') +
-      `\nUse /wow-ai cd <folder> to pick one, or /wow-ai cd alone for the default.`);
+      `\nUse /azermind cd <folder> to pick one, or /azermind cd alone for the default.`);
     return;
   }
   // Which agent: the chat's own (an "agent=" flag), else the bridge's default.
-  const agentId = job.agent ? A.normalizeAgent(job.agent) : DEFAULT_AGENT;
+  const agentId = job.agent ? A.normalizeAgent(job.agent) : A.normalizeAgent(cfg.agent || DEFAULT_AGENT);
   if (!agentId) {
     log(`${tag} unknown agent "${job.agent}"`);
     finish(job, 'error', `Unknown agent "${job.agent}". This bridge knows: ${A.agentIds().join(', ')}.\n` +
-      `Use /wow-ai agent <name> to pick one, or /wow-ai agent alone for the default (${DEFAULT_AGENT}).`);
+      `Use /azermind agent <name> to pick one, or /azermind agent alone for the default (${DEFAULT_AGENT}).`);
     return;
   }
   job.agent = agentId;
   const agent = A.AGENTS[agentId];
-  const acfg = A.agentConfig(cfg, agentId);
+  let acfg = A.agentConfig(cfg, agentId);
+  {
+    try { acfg = CodexSettings.applyAgent(agentId, acfg, job, modelCatalogs.snapshot()[agentId].models, modelCatalogs.snapshot()[agentId]); }
+    catch (e) { finish(job, 'error', e.message); return; }
+  }
   const cmd = A.resolveCommand(agentId, acfg);
   if (!cmd.found) {
     log(`${tag} ${agentId} not found: ${cmd.note}`);
@@ -528,6 +592,12 @@ function runJob(job) {
     return;
   }
   const skey = sessKey(job);
+  {
+    const settingsKey = JSON.stringify([acfg.model || '', acfg.reasoning || '']);
+    state.sessionSettings = state.sessionSettings || {};
+    if (state.sessionSettings[skey] && state.sessionSettings[skey] !== settingsKey) { delete state.sessions[skey]; delete state.sessions[key]; }
+    state.sessionSettings[skey] = settingsKey;
+  }
   if (job.newSession) { delete state.sessions[skey]; delete state.sessions[key]; }
   // Agents keep sessions per project folder, and a session belongs to the agent
   // that made it, so a chat that changes either starts fresh.
@@ -553,21 +623,22 @@ function runJob(job) {
   const system = P.systemPrompt(ctx, primer());
   const systemShort = P.systemPrompt(ctx, '');
   const promptFile = path.join(TMP_DIR, `prompt-${job.id}-${Date.now().toString(36)}.txt`);
-  const input = agent.input({ prompt: job.text, system, systemShort, resume, cfg: acfg });
+  const researchPrompt = job.text + Wowhead.references(ctx, job.text);
+  const input = agent.input({ prompt: researchPrompt, system, systemShort, resume, cfg: acfg });
   if (input.promptFile !== undefined) {
     try { fs.mkdirSync(TMP_DIR, { recursive: true }); fs.writeFileSync(promptFile, input.promptFile); }
     catch (e) { finish(job, 'error', `Could not write the prompt file ${promptFile}: ${e.message}`); return; }
   }
   const args = [...cmd.args, ...agent.args({
     cfg: acfg, resume, cwd, system, systemShort, promptFile,
-    prompt: job.text, timeoutMs: cfg.timeoutMs,
+    prompt: researchPrompt, timeoutMs: cfg.timeoutMs,
   })];
   const env = agent.env({ ...process.env });
   // Where this run's tools append map commands (docs/MAP.md); any agent can use it.
   try {
     fs.mkdirSync(MAP_DIR, { recursive: true });
     fs.rmSync(mapFileFor(job), { force: true });
-    env.WOW_AI_MAP_FILE = mapFileFor(job);
+    env.AZERMIND_MAP_FILE = mapFileFor(job);
   } catch (e) { log(`${tag} map file unavailable: ${e.message}`); }
 
   log(`${tag} (${job.via}) ${agent.name} starting in ${cwd}${resume ? ' (resume ' + resume.slice(0, 8) + ')' : ' (new session)'}${ctx ? ' [game context]' : ''}${running.size ? ' [' + (running.size + 1) + ' running]' : ''}`);
@@ -588,6 +659,7 @@ function runJob(job) {
   let parserError = false;
 
   const pushProgress = (line) => {
+    if (child.wowCancelled) return;
     progress.push(line);
     while (progress.length > 10) progress.shift();
     beat(job);
@@ -599,6 +671,7 @@ function runJob(job) {
   const keepalive = setInterval(() => beat(job), 45000);
 
   const handleLine = (line) => {
+    if (child.wowCancelled) return;
     if (parserError) return;
     let ev;
     try { ev = JSON.parse(line); } catch { return; }
@@ -657,6 +730,7 @@ function runJob(job) {
 
   child.on('close', (code) => {
     cleanup();
+    if (child.wowCancelled) return;
     if (agent.stream === 'text') {
       try {
         const r = parser.finish({ stdout: stdoutText, stderr, code });
@@ -753,6 +827,7 @@ function captureCommand() {
 }
 
 function startCapture() {
+	const assemble = P.createStripAssembler();
   const [cmd, args] = captureCommand();
   const ps = spawn(cmd, args, { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
   const rl = readline.createInterface({ input: ps.stdout });
@@ -763,7 +838,9 @@ function startCapture() {
     if (ev.warn) { log('capture:', ev.warn); return; }
     if (ev.error) { log('capture error:', ev.error); return; }
     if (typeof ev.id === 'number') {
-      const jobs = jobsFromStrip(ev.id, ev.text);
+      const payload = assemble(ev.text);
+      if (payload === null) return;
+      const jobs = jobsFromStrip(ev.id, payload);
       log(`strip #${ev.id}: ${jobs.length} message(s)`);
       for (const job of jobs) submit(job);
     }
@@ -786,8 +863,8 @@ function agentLine(id) {
 }
 
 function banner() {
-  console.log('WoW AI bridge');
-  console.log(`  folder   : ${DEFAULT_CWD}  (${DEFAULT_CWD_SOURCE}; chats can override with /wow-ai cd)`);
+  console.log('AzerMind bridge');
+  console.log(`  folder   : ${DEFAULT_CWD}  (${DEFAULT_CWD_SOURCE}; chats can override with /azermind cd)`);
   console.log(`  addons   : ${cfg.addonDir}`);
   if (path.basename(CLIENT_DIR) === '_classic_beta_' && fs.existsSync(path.join(path.dirname(CLIENT_DIR), '_forever_'))) {
     console.log('  WARNING  : this config is on the beta client, but _forever_ is installed - run: node setup.js, then restart WoW');
@@ -797,17 +874,18 @@ function banner() {
   console.log(`  capture  : ${cap.enabled ? 'on (' + cap.processName + ', ' + cap.cellsPerRow + 'x' + cap.maxRows + ' cells of ' + cap.cellPx + 'px)' : 'off'}`);
   console.log(`  parallel : up to ${MAX_PARALLEL} chats at once`);
   console.log(`  fallback : ${SAVED_VARS || 'waiting for the first login'}`);
-  console.log(`  agent    : ${DEFAULT_AGENT} (default; chats pick their own with /wow-ai agent)`);
+  console.log(`  agent    : ${DEFAULT_AGENT} (default; chats pick their own with /azermind agent)`);
   for (const id of A.agentIds()) console.log(`  ${id.padEnd(9)}: ${agentLine(id)}`);
   console.log(`  sessions : ${Object.keys(state.sessions).length} saved`);
   const ctx = gameContext();
-  console.log(`  context  : ${cfg.gameContext === false ? 'off (gameContext in config.json)' : ctx ? (ctx.split('\n').find(l => /^Character:/i.test(l)) || ctx.split('\n')[0]).slice(0, 100) : 'none yet (the addon sends it with its hello; /wow-ai context in game)'}`);
+  console.log(`  context  : ${cfg.gameContext === false ? 'off (gameContext in config.json)' : ctx ? (ctx.split('\n').find(l => /^Character:/i.test(l)) || ctx.split('\n')[0]).slice(0, 100) : 'none yet (the addon sends it with its hello; /azermind context in game)'}`);
   console.log(`  primer   : ${!PRIMER_FILE ? 'off (primerFile in config.json)' : primer() ? path.resolve(REPO, PRIMER_FILE) + ' (' + primer().length + ' chars, with the context)' : 'NOT FOUND: ' + path.resolve(REPO, PRIMER_FILE)}`);
   console.log('Leave this window open while you play. Ctrl+C to stop.\n');
 }
 
 findSavedVars();
 banner();
+if (!exitWhenIdle) modelCatalogs.refresh().catch(() => {});
 if (inject !== null) {
   submit({ id: state.lastId + 1, session: '', chat: '', text: inject, cwd: '', newSession: false, via: 'inject', agent: injectAgent || '' });
 } else {

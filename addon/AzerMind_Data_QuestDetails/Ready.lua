@@ -1,0 +1,1 @@
+AzerMindCatalog.loaded.QuestDetails=true

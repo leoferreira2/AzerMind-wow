@@ -1,4 +1,4 @@
--- WoWAI: talk to local coding agents (Claude Code, Codex, Grok) from inside WoW,
+-- AzerMind: talk to local coding agents (Claude Code, Codex, Grok) from inside WoW,
 -- without reloading.
 --
 -- The WoW sandbox has no network and no file reads at runtime. Two doors remain open:
@@ -8,7 +8,7 @@
 --        bridge.js screen-captures that corner and decodes it. Nothing touches the game.
 --   IN:  load-on-demand addons read their files from disk at the moment they load.
 --        The bridge writes the latest replies for every chat into a pool of pre-made
---        slot addons (WoWAI_S001..S200); we load a fresh slot from a timer.
+--        slot addons (AzerMind_S001..S200); we load a fresh slot from a timer.
 --        Each slot is single-use per session; a /reload frees them all.
 --   Fallback ("reload" mode): SavedVariables + Inbox.lua, a ReloadUI() per step.
 --
@@ -17,21 +17,24 @@
 -- Everything here is plain addon API. No automation, no memory reading.
 
 local ADDON_NAME = ...
-local WoWAI = {}
-_G.WoWAI = WoWAI
-local Codec = WoWAI_Codec
+local AzerMind = {}
+_G.AzerMind = AzerMind
+local Codec = AzerMind_Codec
 
 local DEFAULT_CWD = "" -- empty = the bridge's configured defaultCwd
 local MAX_HISTORY = 200
 local MAX_CHATS = 16
 
 local SLOT_COUNT = 200
-local SLOT_PREFIX = "WoWAI_S"
+local SLOT_PREFIX = "AzerMind_S"
 local ACT_MAX = 60 -- heartbeat files per message (act/NNN/01..60.wav)
 local PRESENCE_MAX = 2000 -- presence/0001..2000.wav, one flipped by the bridge every 30 s
 local STRIP_TRIES = 3 -- re-show an unacknowledged message this many times before falling back
-local CELL, CELLS_PER_ROW, MAX_ROWS = 4, 200, 48
-local STRIP_SECONDS = 40 -- max per message; it leaves the strip as soon as the bridge acknowledges
+local CELL, CELLS_PER_ROW, MAX_ROWS = 4, 200, 32
+-- Keep the decoder geometry stable; smaller frames use more transport fragments.
+local STRIP_PAYLOAD = math.floor(CELLS_PER_ROW * MAX_ROWS * Codec.BITS / 8) - 8
+local FRAGMENT_BYTES = 1100
+local STRIP_SECONDS = 120 -- max per message; it leaves the strip as soon as the bridge acknowledges
 local POLL_SCHEDULE = { 5, 10, 16, 24, 34, 46, 60, 80, 100, 130, 160, 200, 240, 300 }
 local POLL_TAIL = 60
 local TICK_SECONDS = 2
@@ -54,7 +57,7 @@ local BACKDROP = {
 }
 
 -- The assistant bubble is labelled with the agent that wrote it (see AgentName).
-local ROLE_STYLE = {
+local ROLE_STYLE = AzerMindTheme and AzerMindTheme.roles or {
 	user      = { label = "You",    color = { 0.49, 0.78, 1.00 }, bg = { 0.25, 0.45, 0.75, 0.16 } },
 	assistant = { label = "AI",     color = { 1.00, 0.82, 0.25 }, bg = { 0.85, 0.70, 0.30, 0.10 } },
 	system    = { label = "System", color = { 0.62, 0.62, 0.62 }, bg = { 0.50, 0.50, 0.50, 0.10 } },
@@ -76,8 +79,31 @@ local function Wire(s)
 	return (value:gsub("[\30\31]", " "))
 end
 
+-- Strip WoW markup without losing item names or tooltip attributes.
+function AzerMind.PlainText(s)
+	local text = tostring(s or "")
+	text = text:gsub("|H[^|]+|h(.-)|h", "%1")
+	text = text:gsub("|cn[%w_]+:", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+	text = text:gsub("|T.-|t", ""):gsub("|A.-|a", "")
+	return text
+end
+
+-- Keep attachments in storage and on the wire, out of the message bubble.
+function AzerMind.MessageText(role, text)
+	text = AzerMind.PlainText(text)
+	if role == "user" then
+		local start = text:find("\n\n--- Linked from the game ---", 1, true)
+		if start then text = text:sub(1, start - 1) end
+	elseif role == "assistant" then
+		local start = text:find("\n%s*TL;DR:%s*\n")
+		if start and text:sub(1, start - 1):find("%S") then text = text:sub(1, start - 1) end
+	end
+	return text
+end
+
 -- EditBoxes do not render UI escape sequences, so just make pipes harmless.
 local function Display(s)
+	s = AzerMind.PlainText(s)
 	return (tostring(s or ""):gsub("|", "¦"))
 end
 
@@ -192,12 +218,13 @@ local function AnyPending()
 end
 
 local function InitDB()
-	WoWAIDB = WoWAIDB or {}
-	db = WoWAIDB
+	AzerMindDB = AzerMindDB or {}
+	db = AzerMindDB
 	db.settings = db.settings or {}
 	local s = db.settings
 	if s.autoRefresh == nil then s.autoRefresh = true end
 	if s.signal == nil then s.signal = true end
+	if s.contextMode ~= "full" and s.contextMode ~= "custom" then s.contextMode = "basic" end
 	if s.context == nil then s.context = true end -- tell the agent about the character, zone, etc.
 	-- How much of each reply to print in the game chat. "summary" (the agent's
 	-- closing TL;DR lines) replaced "full" as the default; an install that still
@@ -269,7 +296,7 @@ end
 
 local function SafeReload()
 	if InCombatLockdown() then
-		WoWAI.reloadAfterCombat = true
+		AzerMind.reloadAfterCombat = true
 		if ui.status then
 			ui.status:SetText("In combat - will reload as soon as it ends")
 		end
@@ -281,12 +308,12 @@ end
 -- ReloadUI() only works from a hardware event (a keypress or click), never from
 -- a timer. So the automatic reload piggybacks on the player's own next keypress
 -- once the interval has elapsed. The key still reaches the game normally.
-local keyCatcher = CreateFrame("Frame", "WoWAIKeyCatcher", UIParent)
+local keyCatcher = CreateFrame("Frame", "AzerMindKeyCatcher", UIParent)
 keyCatcher:Hide()
 keyCatcher:EnableKeyboard(true)
 keyCatcher:SetScript("OnKeyDown", function(self, key)
 	if db and AnyPending() and db.settings.autoRefresh
-		and GetTime() >= (WoWAI.nextAutoRefresh or 0)
+		and GetTime() >= (AzerMind.nextAutoRefresh or 0)
 		and not InCombatLockdown() then
 		self:Hide()
 		ReloadUI()
@@ -295,7 +322,7 @@ end)
 
 -- Arm the keypress reload. In pixel mode this is only used once the slot pool
 -- is exhausted (a reload frees every slot) or the slots are not installed.
-function WoWAI.ArmAutoRefresh()
+function AzerMind.ArmAutoRefresh()
 	keyCatcher:Hide()
 	if not AnyPending() or not db.settings.autoRefresh then return end
 	if db.settings.mode == "pixel" and not (run.slotsExhausted or run.slotsMissing or run.pixelFailed) then return end
@@ -306,7 +333,7 @@ function WoWAI.ArmAutoRefresh()
 		keyCatcher:SetPropagateKeyboardInput(true)
 		keyCatcher.propagates = true
 	end
-	WoWAI.nextAutoRefresh = GetTime() + db.settings.interval
+	AzerMind.nextAutoRefresh = GetTime() + db.settings.interval
 	keyCatcher:Show()
 end
 
@@ -319,7 +346,7 @@ local cellPool = {}
 
 local function EnsureStrip()
 	if strip then return strip end
-	strip = CreateFrame("Frame", "WoWAIStrip", UIParent)
+	strip = CreateFrame("Frame", "AzerMindStrip", UIParent)
 	strip:SetFrameStrata("TOOLTIP")
 	strip:SetFrameLevel(10000)
 	-- Scale so that one UI unit is exactly one physical pixel (see Blizzard's PixelUtil).
@@ -345,7 +372,8 @@ local function ShowStrip(id, payload)
 	local cells = Codec.Encode(id % 65536, payload)
 	local s = EnsureStrip()
 	local rows = math.ceil(#cells / CELLS_PER_ROW)
-	local total = rows * CELLS_PER_ROW
+	s:SetSize(CELLS_PER_ROW * CELL, rows * CELL)
+	local total = #cells
 	for i = 1, total do
 		local t = cellPool[i]
 		if not t then
@@ -396,7 +424,15 @@ local function RefreshStrip()
 	local parts, size, latest = {}, 0, ids[#ids]
 	for i = #ids, 1, -1 do
 		local r = RecordFor(ids[i], run.outbound[ids[i]])
-		if size + #r + 1 > Codec.MAX_PAYLOAD then break end
+		if #r > STRIP_PAYLOAD then
+			-- Hex chunks preserve UTF-8 bytes even when a boundary splits a character.
+			local count = math.ceil(#r / FRAGMENT_BYTES)
+			local part = math.floor(GetTime() / 0.75) % count + 1
+			local payload = table.concat({ "F1", Wire(db.session), tostring(ids[i]), tostring(part), tostring(count), ToHex(r:sub((part - 1) * FRAGMENT_BYTES + 1, part * FRAGMENT_BYTES)) }, US)
+			ShowStrip(ids[i], payload)
+			return
+		end
+		if size + #r + 1 > STRIP_PAYLOAD then break end
 		table.insert(parts, 1, r)
 		size = size + #r + 1
 	end
@@ -431,12 +467,12 @@ end
 
 local function CheckSignal(kind, id)
 	if run.signalUnreliable then return false end
-	return SoundValid(string.format("Interface\\AddOns\\WoWAI\\%s\\%03d.wav", kind, SlotNumber(id)))
+	return SoundValid(string.format("Interface\\AddOns\\AzerMind\\%s\\%03d.wav", kind, SlotNumber(id)))
 end
 
 -- Heartbeat: the bridge flips act/NNN/kk.wav for the k-th action of message NNN.
 local function ActPath(id, k)
-	return string.format("Interface\\AddOns\\WoWAI\\act\\%03d\\%02d.wav", SlotNumber(id), k)
+	return string.format("Interface\\AddOns\\AzerMind\\act\\%03d\\%02d.wav", SlotNumber(id), k)
 end
 
 local function StartActivity(chat, id)
@@ -473,7 +509,7 @@ local function NotedBridge(at)
 end
 
 local function PresencePath(k)
-	return string.format("Interface\\AddOns\\WoWAI\\presence\\%04d.wav", k)
+	return string.format("Interface\\AddOns\\AzerMind\\presence\\%04d.wav", k)
 end
 
 -- Valid presence files form a prefix 1..k, so a binary search finds the head.
@@ -511,7 +547,7 @@ end
 -- suspicious. Without them the addon only hears from it every IDLE_POLL_SECONDS,
 -- so the windows have to be wider or the light could never stay green between
 -- messages and every reply would be followed by a Reconnect.
-function WoWAI.BridgeState()
+function AzerMind.BridgeState()
 	local seen = run.bridgeSeen
 	if not seen then
 		return "unknown", 0.6, 0.6, 0.6, "Bridge: not seen yet this session"
@@ -537,8 +573,8 @@ local STATE_ICON = {
 	unknown = "Interface\\FriendsFrame\\StatusIcon-Offline",
 }
 
-function WoWAI.UpdateDot()
-	local state, _, _, _, tip = WoWAI.BridgeState()
+function AzerMind.UpdateDot()
+	local state, _, _, _, tip = AzerMind.BridgeState()
 	if run.pixelFailed then state = "down" end
 	if not signalAvailable and signalStats.selftest then
 		tip = tip .. "\n(sound-file channel unavailable: " .. signalStats.selftest .. "; using slot checks only)"
@@ -554,14 +590,14 @@ end
 -- Connected = the bridge has been seen recently. In pixel mode, sending needs this;
 -- until then the Connect button takes the Send button's place. The reload
 -- transport has no idea whether the bridge is there, so it never gates.
-function WoWAI.IsConnected()
+function AzerMind.IsConnected()
 	if not db or db.settings.mode ~= "pixel" then return true end
-	return WoWAI.BridgeState() == "ok" and not run.pixelFailed
+	return AzerMind.BridgeState() == "ok" and not run.pixelFailed
 end
 
 -- Connect button: say hello to the bridge (it acks, refreshes the slots and
 -- offers a restore), ignoring SayHello's throttle so a click always does something.
-function WoWAI.Connect()
+function AzerMind.Connect()
 	if db.settings.mode ~= "pixel" then
 		SafeReload()
 		return
@@ -570,22 +606,22 @@ function WoWAI.Connect()
 	run.pixelFailed = nil
 	run.connectFailed = nil
 	run.connectingAt = GetTime()
-	WoWAI.SayHello()
+	AzerMind.SayHello()
 end
 
 -- One word for the connection state, so Tick can tell when it changed.
 local function ConnectionKey()
-	if WoWAI.IsConnected() then return "ok" end
+	if AzerMind.IsConnected() then return "ok" end
 	if run.connectingAt then return "connecting" end
 	if run.connectFailed then return "failed" end
-	return WoWAI.BridgeState()
+	return AzerMind.BridgeState()
 end
 
 -- Called every tick: time out a Connect attempt, and redraw when the state flips
 -- (light, button, status line, placeholder) without redrawing every tick.
-function WoWAI.CheckConnection()
+function AzerMind.CheckConnection()
 	if run.connectingAt then
-		if WoWAI.IsConnected() then
+		if AzerMind.IsConnected() then
 			run.connectingAt, run.connectFailed = nil, nil
 			-- A message typed while disconnected goes out now, without a second click,
 			-- as long as the same chat is still in front and free.
@@ -594,26 +630,28 @@ function WoWAI.CheckConnection()
 			local c = queued and ActiveChat()
 			if c and c.id == queued.chat and not c.pendingId then
 				if ui.input and Trim(ui.input:GetText() or "") == queued.text then ui.input:SetText("") end
-				WoWAI.Send(queued.text, queued.allow)
+				AzerMind.Send(queued.text, queued.allow)
 			end
 		elseif GetTime() - run.connectingAt > CONNECT_WAIT then
 			run.connectingAt, run.connectFailed = nil, true
 			run.sendOnConnect = nil -- the text is still in the box
 		end
-	elseif run.connectFailed and WoWAI.IsConnected() then
+	elseif run.connectFailed and AzerMind.IsConnected() then
 		run.connectFailed = nil
 	end
 	local key = ConnectionKey()
 	if key ~= run.connKey then
 		run.connKey = key
-		WoWAI.Render()
+		AzerMind.Render()
 	end
 end
 
 -- Swap Send and Connect depending on the state; part of UpdateStatus.
-function WoWAI.UpdateConnect()
+function AzerMind.UpdateConnect()
 	if not ui.connect or not ui.send then return end
-	local connected = WoWAI.IsConnected()
+	local connected = AzerMind.IsConnected()
+	local active = ActiveChat()
+	ui.send:SetText(active and active.pendingId and "Stop" or "Send")
 	ui.send:SetShown(connected)
 	ui.connect:SetShown(not connected)
 	if connected then return end
@@ -621,7 +659,7 @@ function WoWAI.UpdateConnect()
 		ui.connect:SetText("Connecting...")
 		ui.connect:Disable()
 	else
-		ui.connect:SetText(WoWAI.BridgeState() == "stale" and "Reconnect" or "Connect")
+		ui.connect:SetText(AzerMind.BridgeState() == "stale" and "Reconnect" or "Connect")
 		ui.connect:Enable()
 	end
 end
@@ -633,8 +671,8 @@ local function SelfTestSignals()
 		signalStats.selftest = "PlaySoundFile missing"
 		return
 	end
-	local emptyLooksValid = SoundValid("Interface\\AddOns\\WoWAI\\ctl\\empty.wav")
-	local validLooksValid = SoundValid("Interface\\AddOns\\WoWAI\\ctl\\valid.wav")
+	local emptyLooksValid = SoundValid("Interface\\AddOns\\AzerMind\\ctl\\empty.wav")
+	local validLooksValid = SoundValid("Interface\\AddOns\\AzerMind\\ctl\\valid.wav")
 	if emptyLooksValid then
 		signalAvailable = false
 		signalStats.selftest = "an empty file reports as playable"
@@ -656,7 +694,7 @@ local function ActivityLine(chat)
 		if a.last then
 			local quiet = now - a.last
 			s = s .. ", last " .. FmtDur(quiet) .. " ago"
-			if quiet > 120 then s = s .. " (quiet for a while - stuck? /wow-ai cancel)" end
+			if quiet > 120 then s = s .. " (quiet for a while - stuck? /azermind cancel)" end
 		elseif now - started > 60 then
 			s = s .. ", no activity seen yet"
 		end
@@ -704,13 +742,33 @@ end
 local function ApplyReplies(replies)
 	local matched = false
 	for _, r in ipairs(replies or {}) do
+		local outbound = run.outbound[r.id]
+		if outbound and outbound.cancel and r.session == db.session and r.status == "cancel-ack" then MarkAcked(r.id) end
+		if outbound and outbound.catalogRefresh and r.session==db.session and (r.status=="models-refreshed" or r.status=="models-error") then
+			MarkAcked(r.id); run.modelsPending=nil
+			if ui.codexSettings then ui.codexSettings.message=r.text; ui.codexSettings.Refresh() end
+		end
+		if outbound and outbound.settings and r.session == db.session and (r.status == "settings-saved" or r.status == "settings-error") then
+			MarkAcked(r.id)
+			run.settingsPending = nil
+			if ui.codexSettings then
+				ui.codexSettings.pending = false
+				ui.codexSettings.dirty = r.status == "settings-error"
+				ui.codexSettings.message = r.text
+				if ui.codexSettings.Refresh then ui.codexSettings.Refresh() end
+			end
+		end
+		if r.status == "ack" and r.session == db.session and outbound and outbound.forget == r.chat then
+			MarkAcked(r.id)
+			db.forget[r.chat] = nil
+		end
 		local c = FindChat(r.chat)
 		if c and c.pendingId and r.id == c.pendingId then
 			matched = true
 			MarkAcked(r.id)
 			local denied = type(r.denied) == "table" and #r.denied > 0 and r.denied or nil
 			if r.status == "done" then
-				Finish(c, "assistant", r.text or "", denied, r.agent, r.summary, WoWAI.CleanMacros(r.macros))
+				Finish(c, "assistant", r.text or "", denied, r.agent, r.summary, AzerMind.CleanMacros(r.macros))
 			elseif r.status == "error" then
 				Finish(c, "system", "Bridge error: " .. tostring(r.text), denied)
 			elseif r.status == "working" then
@@ -759,7 +817,7 @@ local function ImportRestore(r)
 			end
 		end
 		AddHistory(current, "system", "Restored " .. added .. " chat(s) from the bridge after the game reset the saved data.")
-		WoWAI.RenderChatList()
+		AzerMind.RenderChatList()
 	end
 end
 
@@ -767,24 +825,24 @@ local function TryLoadSlot(why)
 	local name = FreeSlot()
 	if not name then
 		run.slotsExhausted = true
-		WoWAI.ArmAutoRefresh()
-		WoWAI.UpdateStatus()
+		AzerMind.ArmAutoRefresh()
+		AzerMind.UpdateStatus()
 		return
 	end
-	WoWAI_SlotData = nil
+	AzerMind_SlotData = nil
 	local loaded, reason = C_AddOns.LoadAddOn(name)
 	if not loaded then
 		run.slotError = reason
 		if reason == "MISSING" or reason == "DISABLED" then
 			run.slotsMissing = true
-			WoWAI.ArmAutoRefresh()
+			AzerMind.ArmAutoRefresh()
 		end
-		WoWAI.UpdateStatus()
+		AzerMind.UpdateStatus()
 		return
 	end
 	run.polls = (run.polls or 0) + 1
 	ScheduleNextPoll()
-	local data = WoWAI_SlotData
+	local data = AzerMind_SlotData
 	if type(data) == "table" and type(data.now) == "number" then
 		-- The bridge's clock and ours are the same machine; translate to GetTime().
 		NotedBridge(GetTime() - (time() - data.now))
@@ -793,19 +851,38 @@ local function TryLoadSlot(why)
 	if type(data) == "table" then
 		if type(data.agent) == "string" and data.agent ~= "" then run.bridgeAgent = data.agent end
 		if type(data.agents) == "table" and #data.agents > 0 then run.bridgeAgents = data.agents end
+		if type(data.agentSettings) == "table" then run.agentSettings = data.agentSettings end
+		if type(data.codexModels) == "table" then run.codexModels = data.codexModels end
+		if type(data.aiDefaults) == "table" then run.aiDefaults = data.aiDefaults end
 	end
 	local matched = ApplyReplies(type(data) == "table" and data.replies or nil)
 	if type(data) == "table" and data.restore then ImportRestore(data.restore) end
-	if type(data) == "table" and data.map and WoWAIMap then WoWAIMap.Sync(data.map) end
+	if type(data) == "table" and data.map and AzerMindMap then AzerMindMap.Sync(data.map) end
 	if why == "signal" and not matched then
 		run.signalUnreliable = true
 	end
-	WoWAI.Render()
+	AzerMind.Render()
+end
+
+function AzerMind.UpdateLatency()
+	if not ui.latency then return end
+	local home, world
+	if type(GetNetStats) == "function" then
+		local ok, _, _, h, w = pcall(GetNetStats)
+		if ok then home, world = h, w end
+	end
+	local function Value(v)
+		return type(v) == "number" and v >= 0 and v < math.huge and string.format("%.0f", v) or "--"
+	end
+	ui.latency:SetText("Home " .. Value(home) .. " / World " .. Value(world) .. " ms")
 end
 
 local function Tick()
 	if not db then return end
 	local now = GetTime()
+	if ui.frame and ui.frame:IsShown() and now >= (run.nextLatency or 0) then
+		AzerMind.UpdateLatency(); run.nextLatency = now + 5
+	end
 	PollPresence()
 	-- Without presence beats, the only evidence is a slot read; spend one every
 	-- IDLE_POLL_SECONDS while idle so the light still reflects reality (and stays
@@ -815,8 +892,8 @@ local function Tick()
 		run.lastIdlePoll = now
 		TryLoadSlot("idle")
 	end
-	WoWAI.UpdateDot()
-	WoWAI.CheckConnection()
+	AzerMind.UpdateDot()
+	AzerMind.CheckConnection()
 	if db.settings.mode ~= "pixel" then return end
 	local changed = false
 	if run.helloPollAt and now >= run.helloPollAt then
@@ -825,15 +902,24 @@ local function Tick()
 		-- Whatever that slot held, the wait is over.
 		if run.restoring then
 			run.restoring = nil
-			WoWAI.Render()
+			AzerMind.Render()
 		end
 	end
 	if run.restoring and now - run.restoring > 25 then
 		run.restoring = nil
-		WoWAI.Render()
+		AzerMind.Render()
+	end
+	-- Control messages have no waiting chat, so poll their explicit receipts too.
+	for _, rec in pairs(run.outbound) do
+		if (rec.forget or rec.settings or rec.catalogRefresh or rec.cancel) and not rec.acked and now - rec.sentAt >= 2
+			and now - (run.lastControlPoll or -1e9) >= 4 then
+			run.lastControlPoll = now
+			TryLoadSlot("control")
+			break
+		end
 	end
 	for id, rec in pairs(run.outbound) do
-		if not rec.acked and CheckSignal("ack", id) then
+		if not rec.settings and not rec.catalogRefresh and not rec.cancel and not rec.acked and CheckSignal("ack", id) then
 			NoteAcked(rec)
 			changed = true
 			NotedBridge()
@@ -841,7 +927,7 @@ local function Tick()
 		-- A hello only needs the bridge to have been seen; it never escalates.
 		-- A forget is the same, but the bridge must have been seen a moment after
 		-- the record went up, so it had a chance to read it.
-		if (rec.hello or rec.forget) and not rec.acked and run.bridgeSeen and run.bridgeSeen >= rec.sentAt + (rec.forget and 2 or 0) then
+		if rec.hello and not rec.acked and run.bridgeSeen and run.bridgeSeen >= rec.sentAt then
 			NoteAcked(rec)
 			changed = true
 		end
@@ -864,23 +950,31 @@ local function Tick()
 				changed = true
 			else
 				-- Give up on pixels for this message; the reload path still has it.
+				if rec.settings then
+					run.settingsPending = nil
+					if ui.codexSettings then ui.codexSettings.pending = false; ui.codexSettings.dirty = true; ui.codexSettings.message = "No confirmation. Reconnect and try saving again."; ui.codexSettings.Refresh() end
+				end
+				if rec.catalogRefresh then
+					run.modelsPending=nil
+					if ui.codexSettings then ui.codexSettings.message="No refresh confirmation. Reconnect and try again."; ui.codexSettings.Refresh() end
+				end
 				run.outbound[id] = nil
 				run.pixelFailed = true
 				changed = true
-				WoWAI.ArmAutoRefresh()
+				AzerMind.ArmAutoRefresh()
 			end
 		end
 	end
 	if changed then
 		RefreshStrip()
-		WoWAI.UpdateStatus()
+		AzerMind.UpdateStatus()
 	end
 	if not AnyPending() then return end
 	local moved = false
 	for _, c in ipairs(db.chats) do
 		if c.pendingId and PollActivity(c) then moved = true end
 	end
-	if moved then WoWAI.Render() end
+	if moved then AzerMind.Render() end
 	for _, c in ipairs(db.chats) do
 		if c.pendingId and CheckSignal("sig", c.pendingId) then
 			TryLoadSlot("signal")
@@ -894,14 +988,14 @@ end
 
 -- Pull whatever bridge.js last wrote into Inbox.lua (the reload path).
 local function ProcessInbox()
-	local inbox = WoWAI_Inbox
+	local inbox = AzerMind_Inbox
 	if type(inbox) ~= "table" then return end
 	if type(inbox.cwd) == "string" and inbox.cwd ~= "" then run.bridgeCwd = inbox.cwd end
 	if type(inbox.agent) == "string" and inbox.agent ~= "" then run.bridgeAgent = inbox.agent end
 	if type(inbox.agents) == "table" and #inbox.agents > 0 then run.bridgeAgents = inbox.agents end
 	ApplyReplies(inbox.replies)
 	if inbox.restore then ImportRestore(inbox.restore) end
-	if inbox.map and WoWAIMap then WoWAIMap.Sync(inbox.map) end
+	if inbox.map and AzerMindMap then AzerMindMap.Sync(inbox.map) end
 end
 
 Finish = function(chat, role, text, denied, agent, summary, macros)
@@ -921,8 +1015,8 @@ Finish = function(chat, role, text, denied, agent, summary, macros)
 		ui.input:SetText(chat.draft)
 		chat.draft = nil
 	end
-	WoWAI.Render()
-	WoWAI.Notify(chat, text, agent, summary)
+	AzerMind.Render()
+	AzerMind.Notify(chat, text, agent, summary)
 end
 
 ---------------------------------------------------------------------------
@@ -936,7 +1030,7 @@ end
 -- are meaningless markup to the agent; their tooltips are what the player sees).
 -- Every game API here is optional: whatever the client lacks is left out.
 
-local CONTEXT_MAX = 900 -- bytes of context per record; the strip has ~3.2 KB for everything
+local CONTEXT_MAX = 14000 -- Fits alongside a 48 KB question in the bounded multipart record.
 local LINK_LINES_MAX = 30 -- tooltip lines kept per link
 local LINK_BYTES_MAX = 900 -- bytes kept per link
 
@@ -965,7 +1059,7 @@ local PROFESSION_SKILL_IDS = {
 -- The character's skill lines as { name, isHeader, rank, maxRank, skillID }.
 -- Forever only has C_SkillInfo (one table per line); the classic globals
 -- (multiple returns) are the fallback for other clients.
-function WoWAI.SkillLines()
+function AzerMind.SkillLines()
 	local out = {}
 	if C_SkillInfo and C_SkillInfo.GetNumSkillLines then
 		local n = Try(C_SkillInfo.GetNumSkillLines)
@@ -994,7 +1088,87 @@ function WoWAI.SkillLines()
 	return out
 end
 
-function WoWAI.GameContext()
+-- Read the spellbook, not a trainer catalogue: only currently learned entries.
+function AzerMind.LearnedSpells()
+	local entries, seen, bytes, truncated = {}, {}, 0, false
+	local function Add(name, rank, id)
+		if type(name) ~= "string" or name == "" then return end
+		local entry = name .. (type(rank) == "string" and rank ~= "" and (" (" .. rank .. ")") or " (rank unavailable)")
+		if seen[entry] then return end
+		seen[entry] = true
+		if tonumber(id) then entry = entry .. " #" .. id end
+		if bytes + #entry + 2 > 1800 then truncated = true; return end
+		entries[#entries + 1] = entry; bytes = bytes + #entry + 2
+	end
+	if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and C_SpellBook.GetSpellBookItemInfo then
+		local bank = Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player or 0
+		for tab = 1, math.min(tonumber(Try(C_SpellBook.GetNumSpellBookSkillLines)) or 0, 30) do
+			local info = Try(C_SpellBook.GetSpellBookSkillLineInfo, tab)
+			if type(info) == "table" then
+				local offset = tonumber(info.itemIndexOffset) or 0
+				for index = offset + 1, offset + math.min(tonumber(info.numSpellBookItems) or 0, 500) do
+					local spell = Try(C_SpellBook.GetSpellBookItemInfo, index, bank)
+					if type(spell) == "table" and spell.spellID then
+						local name, rank = Try(C_SpellBook.GetSpellBookItemName, index, bank)
+						rank = rank or Try(C_Spell and C_Spell.GetSpellSubtext, spell.spellID)
+						Add(name or spell.name, rank, spell.spellID)
+					end
+				end
+			end
+		end
+	else
+		for tab = 1, math.min(tonumber(Try(GetNumSpellTabs)) or 0, 30) do
+			local _, _, offset, count = Try(GetSpellTabInfo, tab)
+			for index = (tonumber(offset) or 0) + 1, (tonumber(offset) or 0) + math.min(tonumber(count) or 0, 500) do
+				local kind, id = Try(GetSpellBookItemInfo, index, BOOKTYPE_SPELL or "spell")
+				if kind == "SPELL" then
+					local name, rank = Try(GetSpellBookItemName, index, BOOKTYPE_SPELL or "spell")
+					Add(name, rank, id)
+				end
+			end
+		end
+	end
+	if #entries == 0 then return "Learned spells: unavailable from this client's spellbook API." end
+	return "Learned player spells (spellbook ranks; no rank means unavailable, not rank 1): " .. table.concat(entries, "; ") .. (truncated and "; [partial list: size limit]" or "")
+end
+
+AzerMind.ContextCategories = {
+	{"game", "Game and client version"}, {"character", "Name, class, race, level, faction"},
+	{"identity", "Realm and guild (with character)"}, {"zone", "Zone and subzone"},
+	{"position", "Map and exact coordinates"}, {"progress", "Money and XP"},
+	{"talents", "Talent tree totals"}, {"professions", "Professions and levels"},
+	{"skills", "Other skills and levels"}, {"spells", "Learned spells and ranks"},
+	{"quests", "Active quest IDs and completion"}, {"equipment", "Equipped items and tooltips"},
+}
+function AzerMind.ContextOptions(mode)
+	local selected = type(mode) == "table" and mode or (mode == nil and db.settings.contextFields)
+	local full = (mode or db.settings.contextMode) == "full"
+	local options = {}
+	for _, field in ipairs(AzerMind.ContextCategories) do
+		local key = field[1]
+		if selected then options[key] = selected[key] == true
+		else options[key] = full or key == "game" or key == "character" or key == "zone" end
+	end
+	return options
+end
+function AzerMind.ContextSettings()
+	return AzerMind.ContextOptions(), db.settings.context
+end
+function AzerMind.ReplySound(value)
+    local allowed={[0]=true,[3081]=true,[18019]=true,[3175]=true,[8960]=true,[7355]=true}
+    if value~=nil and allowed[value] then db.settings.replySound=value end
+    return db.settings.replySound==nil and 3081 or db.settings.replySound
+end
+function AzerMind.SaveContextSettings(options, enabled)
+	db.settings.contextFields = AzerMind.ContextOptions(options)
+	db.settings.contextMode = "custom"
+	db.settings.context = enabled == true
+	run.contextSent = nil
+	AzerMind.Render()
+end
+function AzerMind.GameContext(mode)
+	local options = AzerMind.ContextOptions(mode)
+	local full = options.identity
 	local lines = {}
 	local version, build, _, toc = Try(GetBuildInfo)
 	toc = tonumber(toc)
@@ -1004,16 +1178,16 @@ function WoWAI.GameContext()
 	if version then
 		client = " (client " .. tostring(version) .. (build and ("." .. tostring(build)) or "") .. (toc and (", interface " .. toc) or "") .. ")"
 	end
-	table.insert(lines, "Game: " .. game .. client)
+	if options.game then table.insert(lines, "Game: " .. game .. client) end
 
 	local name = Try(UnitName, "player")
-	if name then
-		local realm = Try(GetRealmName)
+	if name and options.character then
+		local realm = full and Try(GetRealmName)
 		local level = Try(UnitLevel, "player")
 		local race = Try(UnitRace, "player")
 		local class = Try(UnitClass, "player")
 		local faction = Try(UnitFactionGroup, "player")
-		local guild = Try(GetGuildInfo, "player")
+		local guild = full and Try(GetGuildInfo, "player")
 		local who = "Character: " .. tostring(name) .. (realm and (" on " .. tostring(realm)) or "")
 		local desc = {}
 		if level then table.insert(desc, "level " .. tostring(level)) end
@@ -1027,10 +1201,12 @@ function WoWAI.GameContext()
 
 	local zone = Try(GetZoneText)
 	local sub = Try(GetSubZoneText)
-	if zone and zone ~= "" then
+	if options.zone and zone and zone ~= "" then
 		table.insert(lines, "Location: " .. zone .. ((sub and sub ~= "" and sub ~= zone) and (" - " .. sub) or ""))
 	end
 
+
+	if options.position then
 	-- Map coordinates, as the minimap shows them (0-100 across the current map;
 	-- addons get no world x/y/z). Modern C_Map first, the vanilla call as fallback.
 	local x, y, mapName
@@ -1050,6 +1226,8 @@ function WoWAI.GameContext()
 		table.insert(lines, string.format("Position: %.1f, %.1f%s%s", x * 100, y * 100, where, mapId and (" (map " .. mapId .. ")") or ""))
 	end
 
+	end -- position
+	if options.progress then
 	local progress = {}
 	local copper = Try(GetMoney)
 	if copper then table.insert(progress, "Money: " .. Money(copper)) end
@@ -1059,6 +1237,8 @@ function WoWAI.GameContext()
 	end
 	if #progress > 0 then table.insert(lines, table.concat(progress, "; ")) end
 
+	end -- progress
+	if options.talents then
 	-- Classic-style talent tabs: name, icon, points spent.
 	local tabs = Try(GetNumTalentTabs)
 	if type(tabs) == "number" and tabs > 0 then
@@ -1072,18 +1252,27 @@ function WoWAI.GameContext()
 		if #parts > 0 then table.insert(lines, "Talents: " .. table.concat(parts, " / ")) end
 	end
 
+	table.insert(lines, "Individual talent ranks: not collected; tree totals only.")
+	end -- talents
+	if options.professions or options.skills then
 	-- Skill lines under the Professions and Secondary Skills headers.
-	local header, parts = nil, {}
+	local header, parts, otherSkills = nil, {}, {}
 	local wanted = { [TRADE_SKILLS or "Professions"] = true, [SECONDARY_SKILLS or "Secondary Skills"] = true }
-	for _, sk in ipairs(WoWAI.SkillLines()) do
+	for _, sk in ipairs(AzerMind.SkillLines()) do
 		if sk.isHeader then
 			header = sk.name
 		elseif (header and wanted[header]) or PROFESSION_SKILL_IDS[sk.skillID] then
 			table.insert(parts, sk.name .. (sk.rank and (" " .. tostring(sk.rank) .. (sk.maxRank and ("/" .. tostring(sk.maxRank)) or "")) or ""))
+		else
+			table.insert(otherSkills, sk.name .. (sk.rank and (" " .. tostring(sk.rank) .. (sk.maxRank and ("/" .. tostring(sk.maxRank)) or "")) or " (rank unavailable)"))
 		end
 	end
-	if #parts > 0 then table.insert(lines, "Professions: " .. table.concat(parts, ", ")) end
+	if options.professions and #parts > 0 then table.insert(lines, "Professions: " .. table.concat(parts, ", ")) end
+	if options.skills and #otherSkills > 0 then table.insert(lines, "Other skills (current/max, as reported by the client): " .. table.concat(otherSkills, ", ")) end
+	end -- professions / skills
+	if options.spells then table.insert(lines, AzerMind.LearnedSpells()) end
 
+	if options.quests then
 	-- Quest log ids (what is accepted, and which are done), so route planning can
 	-- skip pickups and turn-ins that no longer apply.
 	local quests = {}
@@ -1104,18 +1293,77 @@ function WoWAI.GameContext()
 			end
 		end
 	end
-	if #quests > 0 then table.insert(lines, "Quest log (id, * = ready to turn in): " .. table.concat(quests, ",")) end
+	if #quests > 0 then table.insert(lines, "Quest log (id, * = ready to turn in): " .. table.concat(quests, ","))
+	else table.insert(lines, "Quest log: empty or unavailable from client API.") end
+	end -- quests
+	if options.equipment then
+	local equipment = AzerMind.EquipmentDraft(""):gsub("Equipment snapshot taken at [^\n]+", "Currently equipped items (not bag items).")
+	table.insert(lines, (AzerMind.ExpandLinks(equipment)))
+	end -- equipment
 
 	local s = table.concat(lines, "\n"):gsub("[\30\31]", " ")
-	if #s > CONTEXT_MAX then s = s:sub(1, CONTEXT_MAX) end
+	-- Drop complete trailing lines instead of cutting a skill or UTF-8 character.
+	local clipped = false
+	while #s > CONTEXT_MAX - 80 and #lines > 1 do
+		clipped = true
+		table.remove(lines)
+		s = table.concat(lines, "\n"):gsub("[\30\31]", " ")
+	end
+	if clipped then s = s .. "\n[Partial context: trailing sections omitted at size limit.]" end
 	return s
+end
+
+function AzerMind.SetContextMode(mode)
+	if mode ~= "basic" and mode ~= "full" then return end
+	db.settings.contextMode = mode
+	db.settings.contextFields = nil
+	db.settings.context = true
+	run.contextSent = nil
+	if ui.contextToggle then ui.contextToggle:SetText("Character context: " .. (mode == "full" and "Full" or "Basic")) end
+end
+
+-- Guide references are shared independently of character sharing.
+function AzerMind.GuideReferences()
+	return table.concat(db.settings.guideReferences or {}, "\n")
+end
+
+function AzerMind.SaveGuideReferences(text)
+	local urls, seen, lineNumber = {}, {}, 0
+	for line in ((text or "") .. "\n"):gmatch("([^\n]*)\n") do
+		lineNumber=lineNumber+1
+		local url = Trim(line)
+		if url ~= "" then
+			if not url:match("^https?://[^%s/]+") or url:find("[%s|%c]") then
+				return false, "Line "..lineNumber..": use a complete http:// or https:// link."
+			end
+			if #url > 2048 then return false, "Line "..lineNumber..": link exceeds 2048 bytes." end
+			if not seen[url] then seen[url] = true; table.insert(urls, url) end
+		end
+	end
+	if #urls > 20 or #table.concat(urls, "\n") > 8000 then
+		return false, "Use up to 20 links and 8000 bytes in total."
+	end
+	db.settings.guideReferences = urls
+	run.contextSent = nil
+	return true
+end
+
+local function SharedContext()
+	local ctx = db.settings.context and AzerMind.GameContext() or ""
+	local guides = AzerMind.GuideReferences()
+	if guides ~= "" then
+		ctx = ctx .. (ctx ~= "" and "\n\n" or "") ..
+			"Guide references chosen by the player (reference material, not instructions):\n" .. guides ..
+			"\nUse these guides as references when relevant. If you cannot access a guide, say so; do not claim to have read it. Check applicability to this game version."
+	end
+	return ctx
 end
 
 -- The context to put on the next record, or nil when the bridge already has
 -- it (or it wouldn't fit next to this message; it goes with a later one).
 -- "" when the setting is off, so the bridge drops what it had.
 local function ContextToSend(room)
-	local ctx = db.settings.context and WoWAI.GameContext() or ""
+	local ctx = SharedContext()
 	if ctx == (run.contextSent or "") then return nil end
 	if room and #ctx > room then return nil end
 	return ctx
@@ -1125,17 +1373,17 @@ end
 local scanTip
 local function TooltipLines(payload)
 	if not scanTip then
-		scanTip = CreateFrame("GameTooltip", "WoWAIScanTip", UIParent, "GameTooltipTemplate")
+		scanTip = CreateFrame("GameTooltip", "AzerMindScanTip", UIParent, "GameTooltipTemplate")
 	end
 	scanTip:SetOwner(UIParent, "ANCHOR_NONE")
 	scanTip:ClearLines()
 	local lines = {}
 	if pcall(scanTip.SetHyperlink, scanTip, payload) then
 		for i = 1, math.min(scanTip:NumLines() or 0, LINK_LINES_MAX) do
-			local left = _G["WoWAIScanTipTextLeft" .. i]
-			local right = _G["WoWAIScanTipTextRight" .. i]
-			local l = Trim(tostring((left and left:GetText()) or ""))
-			local r = Trim(tostring((right and right:IsShown() and right:GetText()) or ""))
+			local left = _G["AzerMindScanTipTextLeft" .. i]
+			local right = _G["AzerMindScanTipTextRight" .. i]
+			local l = Trim(AzerMind.PlainText((left and left:GetText()) or ""))
+			local r = Trim(AzerMind.PlainText((right and right:IsShown() and right:GetText()) or ""))
 			if r ~= "" then l = l .. "  " .. r end
 			if l ~= "" then table.insert(lines, l) end
 		end
@@ -1149,6 +1397,7 @@ local function DescribeLink(payload)
 	local kind, id = payload:match("^(%a+):(%d+)")
 	if not kind then return payload:match("^(%a+)") or "link" end
 	local s = kind .. " " .. id
+	if kind == "azermindinstance" and AzerMind.InstanceDetails then return s .. "\n" .. AzerMind.InstanceDetails(AzerMind.InstanceByID(id)) end
 	if kind == "item" then
 		local _, _, quality = Try((C_Item and C_Item.GetItemInfo) or GetItemInfo, payload)
 		local desc = type(quality) == "number" and _G["ITEM_QUALITY" .. quality .. "_DESC"]
@@ -1160,7 +1409,7 @@ end
 -- Turn the links in a message into text the agent can use: each becomes [Name]
 -- in place, and a block at the end lists what the tooltip says about it.
 -- Returns the new text and the number of links found.
-function WoWAI.ExpandLinks(text)
+function AzerMind.ExpandLinks(text)
 	local links, seen = {}, {}
 	local function Take(payload, name)
 		if not seen[payload] then
@@ -1172,13 +1421,14 @@ function WoWAI.ExpandLinks(text)
 	-- Coloured links first (|cAARRGGBB|H...|h[Name]|h|r), then bare ones.
 	local out = text:gsub("|c%x%x%x%x%x%x%x%x|H([^|]+)|h%[([^%]]*)%]|h|r", Take)
 	out = out:gsub("|H([^|]+)|h%[([^%]]*)%]|h", Take)
+	out = AzerMind.PlainText(out)
 	if #links == 0 then return text, 0 end
 	local blocks = {}
 	for _, l in ipairs(links) do
 		local head = "[" .. l.name .. "] " .. DescribeLink(l.payload)
-		local body = table.concat(TooltipLines(l.payload), "\n  ")
+		local body = l.payload:match("^azermindinstance:") and "" or table.concat(TooltipLines(l.payload), "\n  ")
 		local block = body ~= "" and (head .. "\n  " .. body) or head
-		if #block > LINK_BYTES_MAX then block = block:sub(1, LINK_BYTES_MAX) .. "..." end
+		if not l.payload:match("^azermindinstance:") and #block > LINK_BYTES_MAX then block = block:sub(1, LINK_BYTES_MAX) .. "..." end
 		table.insert(blocks, block)
 	end
 	return out .. "\n\n--- Linked from the game ---\n" .. table.concat(blocks, "\n"), #links
@@ -1189,7 +1439,7 @@ end
 ---------------------------------------------------------------------------
 
 -- allow: optional list of permission rules to grant before this message runs.
-function WoWAI.Send(text, allow)
+function AzerMind.Send(text, allow)
 	local c = ActiveChat()
 	if not c then return end
 	text = Trim(text or "")
@@ -1204,33 +1454,38 @@ function WoWAI.Send(text, allow)
 		return
 	end
 	if text == "" then return end
-	if not WoWAI.IsConnected() then
+	if not AzerMind.IsConnected() then
 		-- Not connected: the message stays in the box and we try to connect;
 		-- CheckConnection sends it the moment the light turns green. If the bridge
 		-- never answers, the text is still in the box for a later try.
 		if ui.input then ui.input:SetText(text) end
 		run.sendOnConnect = { chat = c.id, text = text, allow = allow }
-		if not run.connectingAt then WoWAI.Connect() end
-		WoWAI.Toggle(true)
+		if not run.connectingAt then AzerMind.Connect() end
+		AzerMind.Toggle(true)
 		return
 	end
 	-- Shift-clicked links become [Name] plus their tooltip, which is what the agent can read.
 	local links
-	text, links = WoWAI.ExpandLinks(text)
-	local limit = Codec.MAX_PAYLOAD - 300
+	text, links = AzerMind.ExpandLinks(text)
+	local limit = 48000
 	if #text > limit then
-		AddHistory(c, "system", "That message is too long for one send (" .. #text .. " chars, max ~" .. limit .. "). Split it up." .. (links > 0 and " Each linked item adds its tooltip to the message." or ""))
-		WoWAI.Render()
+		AddHistory(c, "system", "Message exceeds the " .. limit .. " byte limit, including linked item tooltips.")
+		AzerMind.Render()
 		return
 	end
 	-- The game context rides along when the bridge doesn't have this version yet.
-	local ctx = ContextToSend(limit - #text)
+	local ctx = ContextToSend(63000 - #text)
 
 	db.lastSeq = db.lastSeq + 1
 	local id = db.lastSeq
 	local tokens = {}
 	if c.resetNext then table.insert(tokens, "n") end
 	if c.agent and c.agent ~= "" then table.insert(tokens, "agent=" .. c.agent) end
+	do
+		local options = AzerMind.ChatAISettings(c)
+		if options.model and options.model ~= "" then table.insert(tokens, "model=" .. options.model) end
+		if options.reasoning and options.reasoning ~= "" then table.insert(tokens, "reasoning=" .. options.reasoning) end
+	end
 	local allowHex
 	if type(allow) == "table" and #allow > 0 then
 		table.insert(tokens, "allow=" .. table.concat(allow, ","))
@@ -1249,6 +1504,8 @@ function WoWAI.Send(text, allow)
 		agent = (c.agent and c.agent ~= "") and c.agent or nil,
 		allow = allowHex,
 		newSession = newSession,
+		model = AzerMind.ChatAISettings(c).model,
+		reasoning = AzerMind.ChatAISettings(c).reasoning,
 		t = time(),
 	}
 	c.pendingId = id
@@ -1256,7 +1513,7 @@ function WoWAI.Send(text, allow)
 	c.progress = nil
 	AddHistory(c, "user", text, id)
 	-- A chat still carrying its default name takes its title from the first message
-	-- you send (system notes like "/wow-ai cd" before it don't count).
+	-- you send (system notes like "/azermind cd" before it don't count).
 	if c.name:match("^Chat %d+$") then
 		local first = true
 		for _, m in ipairs(c.history) do
@@ -1273,7 +1530,7 @@ function WoWAI.Send(text, allow)
 		StartActivity(c, id)
 		ScheduleNextPoll()
 		RefreshStrip()
-		WoWAI.Render()
+		AzerMind.Render()
 	else
 		SafeReload()
 	end
@@ -1305,14 +1562,14 @@ end
 -- so the status light and any lost chats come back before the first message.
 -- The game context always rides on it (empty when turned off), so the bridge's
 -- copy is brought in line at every login and Connect.
-function WoWAI.SayHello()
+function AzerMind.SayHello()
 	if db.settings.mode ~= "pixel" then return end
 	local now = GetTime()
 	if run.lastHelloAt and now - run.lastHelloAt < 60 then return end
 	run.lastHelloAt = now
 	db.lastSeq = db.lastSeq + 1
 	local c = ActiveChat()
-	local ctx = db.settings.context and WoWAI.GameContext() or ""
+	local ctx = SharedContext()
 	run.outbound[db.lastSeq] = { chat = c and c.id or "", cwd = c and c.cwd or "", flags = "h", name = c and c.name or "", text = "", ctx = ctx, sentAt = now, hello = true }
 	run.helloPollAt = now + 5
 	-- Deletions the bridge never confirmed ride along with the hello.
@@ -1326,11 +1583,11 @@ function WoWAI.SayHello()
 		if empty then run.restoring = now end
 	end
 	RefreshStrip()
-	WoWAI.Render()
+	AzerMind.Render()
 end
 
 -- Put the active chat's pending message back on the strip.
-function WoWAI.Resend()
+function AzerMind.Resend()
 	local c = ActiveChat()
 	if not c or not c.pendingId then return end
 	local text
@@ -1342,36 +1599,116 @@ function WoWAI.Resend()
 	end
 	if not text then return end
 	run.outbound[c.pendingId] = { chat = c.id, cwd = c.cwd, flags = (c.agent and c.agent ~= "") and ("agent=" .. c.agent) or "", name = c.name, text = text, sentAt = GetTime() }
+	do
+		local options = AzerMind.ChatAISettings(c)
+		local rec = run.outbound[c.pendingId]
+		if options.model and options.model ~= "" then rec.flags = rec.flags .. ";model=" .. options.model end
+		if options.reasoning and options.reasoning ~= "" then rec.flags = rec.flags .. ";reasoning=" .. options.reasoning end
+	end
 	run.sentAt = GetTime()
 	run.polls = 0
 	ScheduleNextPoll()
 	RefreshStrip()
-	WoWAI.UpdateStatus()
+	AzerMind.UpdateStatus()
 end
 
-function WoWAI.SendFromInput()
+function AzerMind.CancelPending()
+	local c = ActiveChat()
+	if not c or not c.pendingId then return end
+	local target = c.pendingId
+	run.outbound[target] = nil
+	if run.act then run.act[c.id] = nil end
+	c.pendingId, c.progress = nil, nil
+	AddHistory(c, "system", "Response stopped. Cancellation sent to the bridge.")
+	db.lastSeq = db.lastSeq + 1
+	run.outbound[db.lastSeq] = { chat = c.id, cwd = "", flags = "cancel=" .. target, name = c.name, text = "", sentAt = GetTime(), cancel = true }
+	RefreshStrip()
+	AzerMind.Render()
+end
+
+function AzerMind.EquipmentDraft(existing)
+	local first, last = "--- Equipped items ---", "--- End equipped items ---"
+	local text = tostring(existing or "")
+	local startAt = text:find(first, 1, true)
+	local endAt = startAt and text:find(last, startAt, true)
+	if endAt then text = text:sub(1, startAt - 1) .. text:sub(endAt + #last) end
+	local slots = {"Head", "Neck", "Shoulders", "Shirt", "Chest", "Waist", "Legs", "Feet", "Wrists", "Hands", "Ring 1", "Ring 2", "Trinket 1", "Trinket 2", "Back", "Main hand", "Off hand", "Ranged", "Tabard"}
+	local lines = { first, "Equipment snapshot taken at " .. date("%H:%M:%S") .. ". These items are equipped, not just linked from bags." }
+	for slot, label in ipairs(slots) do
+		local link = Try(GetInventoryItemLink, "player", slot)
+		if type(link) == "string" and link ~= "" then
+			if AzerMind.NormalizeItemLink then link = AzerMind.NormalizeItemLink(link) end
+			table.insert(lines, label .. ": " .. link)
+		else
+			local id = Try(GetInventoryItemID, "player", slot)
+			local texture = Try(GetInventoryItemTexture, "player", slot)
+			if id then
+				table.insert(lines, label .. ": item " .. id .. " (details not loaded; refresh this snapshot before comparing stats)")
+				if C_Item and C_Item.RequestLoadItemDataByID then Try(C_Item.RequestLoadItemDataByID, id) end
+			else
+				table.insert(lines, label .. (texture and ": details unavailable" or ": empty"))
+			end
+		end
+	end
+	table.insert(lines, last)
+	text = Trim(text)
+	return (text ~= "" and (text .. "\n\n") or "") .. table.concat(lines, "\n")
+end
+
+function AzerMind.AttachEquipment()
+	if not ui.input then return end
+	local text = AzerMind.EquipmentDraft(ui.input:GetText())
+	ui.input:SetText(text)
+	local c = ActiveChat()
+	if c then c.draft = text end
+	ui.input:SetFocus()
+	if ui.input.SetCursorPosition then ui.input:SetCursorPosition(#text) end
+end
+
+function AzerMind.SendFromInput()
 	if not ui.input then return end
 	local text = ui.input:GetText()
 	ui.input:SetText("")
 	ui.input:ClearFocus() -- hand the keyboard back to the game after sending
-	WoWAI.Send(text)
+	AzerMind.Send(text)
+end
+
+function AzerMind.ClearDraft()
+	if not ui.input then return end
+	ui.input:SetText("")
+	local c = ActiveChat()
+	if c then c.draft = nil end
+	-- A message staged while disconnected must not be sent after clearing it.
+	if run.sendOnConnect and c and run.sendOnConnect.chat == c.id then run.sendOnConnect = nil end
+	ui.input:SetFocus()
+	AzerMind.UpdateStatus()
+end
+
+function AzerMind.AppendQuestDraft(text, chatId)
+	local c = ActiveChat()
+	if not c or c.id ~= chatId or not ui.input then return false end
+	local existing = Trim(ui.input:GetText() or "")
+	local draft = existing ~= "" and (existing .. "\n\n" .. text) or text
+	ui.input:SetText(draft); c.draft = draft; ui.input:SetFocus()
+	if ui.input.SetCursorPosition then ui.input:SetCursorPosition(#draft) end
+	return true
 end
 
 -- The Allow button: grant the rules a reply asked for, then tell the agent to carry on.
-function WoWAI.Allow(chatId, rules)
+function AzerMind.Allow(chatId, rules)
 	local c = FindChat(chatId)
 	if not c or c.pendingId or not rules or #rules == 0 then return end
-	if db.activeChat ~= c.id then WoWAI.SwitchChat(c.id) end
+	if db.activeChat ~= c.id then AzerMind.SwitchChat(c.id) end
 	for _, m in ipairs(c.history) do m.denied = nil end
 	AddHistory(c, "system", "Allowed: " .. table.concat(rules, ", "))
-	WoWAI.Send("Those actions are allowed now. Continue from where you left off.", rules)
+	AzerMind.Send("Those actions are allowed now. Continue from where you left off.", rules)
 end
 
 ---------------------------------------------------------------------------
 -- Chats
 ---------------------------------------------------------------------------
 
-function WoWAI.SwitchChat(id)
+function AzerMind.SwitchChat(id)
 	local c = FindChat(id)
 	if not c then return end
 	local prev = ActiveChat()
@@ -1385,25 +1722,25 @@ function WoWAI.SwitchChat(id)
 		ui.input:SetText(c.draft or "")
 		c.draft = nil
 	end
-	WoWAI.Render()
-	WoWAI.RenderChatList()
+	AzerMind.Render()
+	AzerMind.RenderChatList()
 end
 
-function WoWAI.NewChat(name)
+function AzerMind.NewChat(name)
 	local c = AddChat(name and name ~= "" and name or nil)
 	if not c then
 		local a = ActiveChat()
-		AddHistory(a, "system", "Chat limit reached (" .. MAX_CHATS .. "). Delete one first with /wow-ai delete.")
-		WoWAI.Render()
+		AddHistory(a, "system", "Chat limit reached (" .. MAX_CHATS .. "). Delete one first with /azermind delete.")
+		AzerMind.Render()
 		return
 	end
-	WoWAI.SwitchChat(c.id)
-	WoWAI.Toggle(true)
+	AzerMind.SwitchChat(c.id)
+	AzerMind.Toggle(true)
 end
 
 -- Folder this chat's agent works in. Empty (or "-" / "default") = the bridge's
 -- default. Relative paths are resolved by the bridge against that default.
-function WoWAI.SetFolder(rest, c)
+function AzerMind.SetFolder(rest, c)
 	c = c or ActiveChat()
 	if not c then return end
 	rest = Trim(rest or "")
@@ -1419,12 +1756,12 @@ function WoWAI.SetFolder(rest, c)
 		c.cwd = ""
 		AddHistory(c, "system", "cwd reset to the bridge's default: " .. base)
 	else
-		AddHistory(c, "system", "cwd is the bridge's default: " .. base .. " (/wow-ai cd <folder>, or right-click the chat and pick Folder, to change)")
+		AddHistory(c, "system", "cwd is the bridge's default: " .. base .. " (/azermind cd <folder>, or right-click the chat and pick Folder, to change)")
 	end
-	WoWAI.Render()
+	AzerMind.Render()
 end
 
-StaticPopupDialogs["WOWAI_FOLDER"] = {
+StaticPopupDialogs["AZERMIND_FOLDER"] = {
 	text = "Folder for this chat\n\nRelative to the bridge's folder (%s), ~, or a full path.\nEmpty = the bridge's default. Changing it starts a fresh agent session.",
 	button1 = OKAY,
 	button2 = CANCEL,
@@ -1445,11 +1782,11 @@ StaticPopupDialogs["WOWAI_FOLDER"] = {
 	OnAccept = function(dialog, data)
 		local box = dialog.GetEditBox and dialog:GetEditBox() or dialog.editBox
 		local chat = data and FindChat(data.id)
-		if chat and box then WoWAI.SetFolder(box:GetText(), chat) end
+		if chat and box then AzerMind.SetFolder(box:GetText(), chat) end
 	end,
 	EditBoxOnEnterPressed = function(box)
 		local dialog = box:GetParent()
-		StaticPopupDialogs["WOWAI_FOLDER"].OnAccept(dialog, dialog.data)
+		StaticPopupDialogs["AZERMIND_FOLDER"].OnAccept(dialog, dialog.data)
 		dialog:Hide()
 	end,
 	EditBoxOnEscapePressed = function(box)
@@ -1458,10 +1795,10 @@ StaticPopupDialogs["WOWAI_FOLDER"] = {
 }
 
 -- Folder dialog for a chat (the active one when no id is given).
-function WoWAI.FolderPrompt(id)
+function AzerMind.FolderPrompt(id)
 	local c = (id and FindChat(id)) or ActiveChat()
 	if not c then return end
-	StaticPopup_Show("WOWAI_FOLDER", run.bridgeCwd or "unknown until connected", nil, { id = c.id, cwd = c.cwd })
+	StaticPopup_Show("AZERMIND_FOLDER", run.bridgeCwd or "unknown until connected", nil, { id = c.id, cwd = c.cwd })
 end
 
 -- The agent this chat talks to, by id. Empty (or
@@ -1471,14 +1808,14 @@ local function AgentList()
 	return run.bridgeAgents and table.concat(run.bridgeAgents, ", ") or "claude, codex, grok, agy, hermes"
 end
 
-function WoWAI.SetAgent(rest, c)
+function AzerMind.SetAgent(rest, c)
 	c = c or ActiveChat()
 	if not c then return end
 	rest = Trim(rest or ""):lower()
 	if rest == "-" or rest == "default" then rest = "" end
 	if rest ~= "" and run.bridgeAgents and not Contains(run.bridgeAgents, rest) then
 		AddHistory(c, "system", "Unknown agent \"" .. rest .. "\". The bridge knows: " .. AgentList())
-		WoWAI.Render()
+		AzerMind.Render()
 		return
 	end
 	local changed = rest ~= (c.agent or "")
@@ -1488,12 +1825,12 @@ function WoWAI.SetAgent(rest, c)
 	elseif changed then
 		AddHistory(c, "system", "agent reset to the bridge's default: " .. (run.bridgeAgent and AgentName(run.bridgeAgent) or "unknown until connected"))
 	else
-		AddHistory(c, "system", "agent is the bridge's default: " .. (run.bridgeAgent and AgentName(run.bridgeAgent) or "unknown until connected") .. " (/wow-ai agent <name>, or right-click the chat and pick Agent, to change; agents: " .. AgentList() .. ")")
+		AddHistory(c, "system", "agent is the bridge's default: " .. (run.bridgeAgent and AgentName(run.bridgeAgent) or "unknown until connected") .. " (/azermind agent <name>, or right-click the chat and pick Agent, to change; agents: " .. AgentList() .. ")")
 	end
-	WoWAI.Render()
+	AzerMind.Render()
 end
 
-StaticPopupDialogs["WOWAI_AGENT"] = {
+StaticPopupDialogs["AZERMIND_AGENT"] = {
 	text = "Agent for this chat\n\nOne of: %s.\nEmpty = the bridge's default (%s). Changing it starts a fresh session.",
 	button1 = OKAY,
 	button2 = CANCEL,
@@ -1514,11 +1851,11 @@ StaticPopupDialogs["WOWAI_AGENT"] = {
 	OnAccept = function(dialog, data)
 		local box = dialog.GetEditBox and dialog:GetEditBox() or dialog.editBox
 		local chat = data and FindChat(data.id)
-		if chat and box then WoWAI.SetAgent(box:GetText(), chat) end
+		if chat and box then AzerMind.SetAgent(box:GetText(), chat) end
 	end,
 	EditBoxOnEnterPressed = function(box)
 		local dialog = box:GetParent()
-		StaticPopupDialogs["WOWAI_AGENT"].OnAccept(dialog, dialog.data)
+		StaticPopupDialogs["AZERMIND_AGENT"].OnAccept(dialog, dialog.data)
 		dialog:Hide()
 	end,
 	EditBoxOnEscapePressed = function(box)
@@ -1527,13 +1864,13 @@ StaticPopupDialogs["WOWAI_AGENT"] = {
 }
 
 -- Agent dialog for a chat (the active one when no id is given).
-function WoWAI.AgentPrompt(id)
+function AzerMind.AgentPrompt(id)
 	local c = (id and FindChat(id)) or ActiveChat()
 	if not c then return end
-	StaticPopup_Show("WOWAI_AGENT", AgentList(), run.bridgeAgent and AgentName(run.bridgeAgent) or "unknown until connected", { id = c.id, agent = c.agent or "" })
+	StaticPopup_Show("AZERMIND_AGENT", AgentList(), run.bridgeAgent and AgentName(run.bridgeAgent) or "unknown until connected", { id = c.id, agent = c.agent or "" })
 end
 
-StaticPopupDialogs["WOWAI_RENAME"] = {
+StaticPopupDialogs["AZERMIND_RENAME"] = {
 	text = "Rename this chat",
 	button1 = OKAY,
 	button2 = CANCEL,
@@ -1556,12 +1893,12 @@ StaticPopupDialogs["WOWAI_RENAME"] = {
 		local name = box and Trim(box:GetText() or "") or ""
 		if chat and name ~= "" then
 			chat.name = name:sub(1, 24)
-			WoWAI.Render()
+			AzerMind.Render()
 		end
 	end,
 	EditBoxOnEnterPressed = function(box)
 		local dialog = box:GetParent()
-		StaticPopupDialogs["WOWAI_RENAME"].OnAccept(dialog, dialog.data)
+		StaticPopupDialogs["AZERMIND_RENAME"].OnAccept(dialog, dialog.data)
 		dialog:Hide()
 	end,
 	EditBoxOnEscapePressed = function(box)
@@ -1570,40 +1907,41 @@ StaticPopupDialogs["WOWAI_RENAME"] = {
 }
 
 -- Rename dialog for a chat (the active one when no id is given).
-function WoWAI.RenamePrompt(id)
+function AzerMind.RenamePrompt(id)
 	local c = (id and FindChat(id)) or ActiveChat()
 	if not c then return end
-	StaticPopup_Show("WOWAI_RENAME", nil, nil, { id = c.id, name = c.name })
+	StaticPopup_Show("AZERMIND_RENAME", nil, nil, { id = c.id, name = c.name })
 end
-WoWAI.RenameActive = WoWAI.RenamePrompt
+AzerMind.RenameActive = AzerMind.RenamePrompt
 
 -- Delete a chat (the active one when no id is given). The last chat is cleared
 -- and renamed instead of removed, so there is always one to type into. Either
 -- way the bridge is told to forget it, so a restore won't bring it back.
-function WoWAI.DeleteChat(id)
+function AzerMind.DeleteChat(id)
 	local c, idx = nil, nil
 	if id then c, idx = FindChat(id) end
 	if not c then c, idx = ActiveChat() end
 	if not c then return end
+	if ui.deletedMessage and ui.deletedMessage.chat==c.id then ui.deletedMessage=nil end
 	ForgetOnBridge(c)
 	if #db.chats == 1 then
 		wipe(c.history)
 		c.pendingId, c.progress, c.unread, c.draft = nil, nil, 0, nil
 		c.name = "Chat 1"
-		WoWAI.Render()
-		WoWAI.RenderChatList()
+		AzerMind.Render()
+		AzerMind.RenderChatList()
 		return
 	end
 	table.remove(db.chats, idx)
 	if db.activeChat == c.id then
-		WoWAI.SwitchChat(db.chats[math.min(idx, #db.chats)].id)
+		AzerMind.SwitchChat(db.chats[math.min(idx, #db.chats)].id)
 	else
-		WoWAI.RenderChatList()
+		AzerMind.RenderChatList()
 	end
 end
 
--- The trash can on a chat row asks first; /wow-ai delete does not.
-StaticPopupDialogs["WOWAI_DELETE"] = {
+-- The trash can on a chat row asks first; /azermind delete does not.
+StaticPopupDialogs["AZERMIND_DELETE"] = {
 	text = "Delete chat \"%s\"?\n\nIts transcript goes away (the last chat is cleared instead of removed).",
 	button1 = OKAY,
 	button2 = CANCEL,
@@ -1611,14 +1949,14 @@ StaticPopupDialogs["WOWAI_DELETE"] = {
 	whileDead = true,
 	hideOnEscape = true,
 	OnAccept = function(dialog, data)
-		if data then WoWAI.DeleteChat(data.id) end
+		if data then AzerMind.DeleteChat(data.id) end
 	end,
 }
 
-function WoWAI.ConfirmDelete(id)
+function AzerMind.ConfirmDelete(id)
 	local c = (id and FindChat(id)) or ActiveChat()
 	if not c then return end
-	StaticPopup_Show("WOWAI_DELETE", Display(c.name), nil, { id = c.id })
+	StaticPopup_Show("AZERMIND_DELETE", Display(c.name), nil, { id = c.id })
 end
 
 ---------------------------------------------------------------------------
@@ -1635,11 +1973,11 @@ local MACRO_CHAR_MAX = (Constants and Constants.MacroConsts and Constants.MacroC
 local MACRO_DEFAULT_ICON = 134400 -- question mark: with #showtooltip the game shows the spell's icon
 
 local function MacroSay(msg)
-	print("|cff66ccff[WoW AI]|r " .. msg)
+	print("|cff66ccff[AzerMind]|r " .. msg)
 end
 
 -- Only well-formed entries survive (the slot file is trusted, but not blindly).
-function WoWAI.CleanMacros(list)
+function AzerMind.CleanMacros(list)
 	if type(list) ~= "table" then return nil end
 	local out = {}
 	for _, m in ipairs(list) do
@@ -1674,12 +2012,12 @@ local function MacroIcon(icon)
 	return MACRO_DEFAULT_ICON
 end
 
-function WoWAI.MacroLabel(m)
+function AzerMind.MacroLabel(m)
 	local verb = FindMacro(m.name, m.char) and "Update" or "Create"
 	return verb .. " macro: " .. Display(m.name) .. (m.char and " (character)" or "") .. (m.risky and "  |cffff6060(runs code)|r" or "")
 end
 
-StaticPopupDialogs["WOWAI_MACRO"] = {
+StaticPopupDialogs["AZERMIND_MACRO"] = {
 	text = "%s",
 	button1 = OKAY,
 	button2 = CANCEL,
@@ -1687,13 +2025,13 @@ StaticPopupDialogs["WOWAI_MACRO"] = {
 	whileDead = true,
 	hideOnEscape = true,
 	OnAccept = function(dialog, data)
-		if data then WoWAI.InstallMacro(data, true) end
+		if data then AzerMind.InstallMacro(data, true) end
 	end,
 }
 
 -- Create or update macro `m` ({ name, body, icon, char, risky }). Asks first when it
 -- would replace a different macro of yours, or when it runs code (/run, /click...).
-function WoWAI.InstallMacro(m, confirmed)
+function AzerMind.InstallMacro(m, confirmed)
 	if type(m) ~= "table" then return end
 	if InCombatLockdown() then
 		MacroSay("macros can't be changed in combat; click the button again afterwards.")
@@ -1703,9 +2041,12 @@ function WoWAI.InstallMacro(m, confirmed)
 	if not confirmed then
 		local why = {}
 		if m.risky then table.insert(why, "This macro runs code or clicks buttons (/run, /script, /click). Only keep it if you trust what it does.") end
-		if index and oldBody ~= m.body then table.insert(why, "It replaces your existing macro \"" .. m.name .. "\" (/wow-ai macro undo brings the old one back).") end
+		if index and oldBody ~= m.body then table.insert(why, "It replaces your existing macro \"" .. m.name .. "\" (/azermind macro undo brings the old one back).") end
 		if #why > 0 then
-			StaticPopup_Show("WOWAI_MACRO", table.concat(why, "\n\n") .. "\n\n" .. Display(m.body), nil, m)
+			-- Macro source must stay visible verbatim, including color-looking
+			-- strings inside Lua code; only neutralize the markup delimiter.
+			local preview=tostring(m.body or ""):gsub("|", "¦")
+			StaticPopup_Show("AZERMIND_MACRO", table.concat(why, "\n\n") .. "\n\n" .. preview, nil, m)
 			return
 		end
 	end
@@ -1746,10 +2087,10 @@ function WoWAI.InstallMacro(m, confirmed)
 	-- EditMacro may move the macro (names are sorted): pick up the index it returned.
 	Try(PickupMacro, newIndex)
 	MacroSay("macro \"" .. m.name .. "\" " .. (index and "updated" or "created") .. " and on your cursor: click an action bar slot to place it (it is also in /macro).")
-	WoWAI.Render()
+	AzerMind.Render()
 end
 
-function WoWAI.UndoMacro()
+function AzerMind.UndoMacro()
 	local u = db.macroUndo
 	if not u then MacroSay("nothing to undo."); return end
 	if InCombatLockdown() then MacroSay("macros can't be changed in combat."); return end
@@ -1764,14 +2105,26 @@ function WoWAI.UndoMacro()
 		MacroSay("macro \"" .. u.name .. "\" is back to what it was.")
 	end
 	db.macroUndo = nil
-	WoWAI.Render()
+	AzerMind.Render()
 end
 
 ---------------------------------------------------------------------------
 -- Rendering
 ---------------------------------------------------------------------------
 
-function WoWAI.UpdateStatus()
+function AzerMind.PendingState(chat)
+	local progress = tostring(chat and chat.progress or "")
+	local state = "Thinking"
+	for line in progress:gmatch("[^\n]+") do
+		if line:match("^search:") then state = "Searching the web"
+		elseif line:match("^fetch ") then state = "Reading sources" end
+	end
+	local rec = chat and run.outbound[chat.pendingId]
+	if progress == "" and rec and not rec.acked then state = "Sending message" end
+	return state
+end
+
+function AzerMind.UpdateStatus()
 	if not ui.status then return end
 	local c = ActiveChat()
 	local mode = db.settings.mode
@@ -1786,17 +2139,17 @@ function WoWAI.UpdateStatus()
 			elseif run.slotsExhausted then
 				s = "Slot pool used up this session - next keypress reloads to free it"
 			elseif run.pixelFailed then
-				s = "Bridge didn't see #" .. id .. " after " .. STRIP_TRIES .. " tries - next keypress switches to the reload path (or /wow-ai reload)"
+				s = "Bridge didn't see #" .. id .. " after " .. STRIP_TRIES .. " tries - next keypress switches to the reload path (or /azermind reload)"
 			elseif c.progress or (run.act and run.act[c.id] and run.act[c.id].count > 0) then
 				s = ChatAgentName(c) .. " is working on #" .. id .. " - " .. ActivityLine(c)
 			elseif rec and not rec.acked then
 				s = "Sending #" .. id .. (rec.tries and rec.tries > 1 and (" (try " .. rec.tries .. "/" .. STRIP_TRIES .. ")") or "") .. "..."
-				local state = WoWAI.BridgeState()
+				local state = AzerMind.BridgeState()
 				if state == "down" then s = s .. " - bridge not seen lately, is the bridge running?" end
 			else
 				s = "Waiting for #" .. id .. " (checked " .. (run.polls or 0) .. "x)"
 				if elapsed > 45 then
-					s = s .. " - no sign of the bridge. Is the bridge running? /wow-ai resend"
+					s = s .. " - no sign of the bridge. Is the bridge running? /azermind resend"
 				end
 			end
 		else
@@ -1805,14 +2158,14 @@ function WoWAI.UpdateStatus()
 				s = s .. "; auto on next keypress after " .. db.settings.interval .. "s"
 			end
 		end
-	elseif not WoWAI.IsConnected() then
+	elseif not AzerMind.IsConnected() then
 		if run.connectingAt and run.sendOnConnect then
 			s = "Connecting to the bridge... your message goes out as soon as it answers"
 		elseif run.connectingAt then
 			s = "Connecting to the bridge..."
 		elseif run.connectFailed then
 			s = "No answer from the bridge. Is it running (npm start)? Connect tries again"
-		elseif WoWAI.BridgeState() == "stale" then
+		elseif AzerMind.BridgeState() == "stale" then
 			s = "Bridge not seen for a while - click Reconnect"
 		else
 			s = "Not connected - start the bridge, then click Connect"
@@ -1824,16 +2177,17 @@ function WoWAI.UpdateStatus()
 	else
 		s = "Ready"
 	end
+	if c and c.pendingId then s = AzerMind.PendingState(c) .. "..." end
 	ui.status:SetText(s)
 	run.statusText = s
-	WoWAI.UpdateDot()
-	WoWAI.UpdateConnect()
+	AzerMind.UpdateDot()
+	AzerMind.UpdateConnect()
 	if ui.title then
-		local t = c and Display(c.name) or "WoW AI"
-		local folder = FolderName(ChatFolder(c))
-		if folder ~= "" then t = t .. "  |cff888888" .. Display(folder) .. "|r" end
-		if c and c.agent and c.agent ~= "" then t = t .. "  |cff888888" .. AgentName(c.agent) .. "|r" end
+		local t = c and Display(c.name) or "AzerMind"
 		ui.title:SetText(t)
+		if AzerMindTheme then AzerMindTheme.Color(ui.title, "SetTextColor", "text") end
+		ui.title:SetWidth(math.max(80, ui.frame:GetWidth() - 150))
+		ui.title:SetWordWrap(false)
 	end
 	local cwdText
 	if c and c.cwd ~= "" then
@@ -1853,11 +2207,36 @@ function WoWAI.UpdateStatus()
 	end
 	ui.cwd:SetText("cwd: " .. cwdText .. "   agent: " .. agentText .. "   mode: " .. mode)
 	if ui.resend then ui.resend:SetShown(c and c.pendingId ~= nil and mode == "pixel") end
+	if ui.codexButton then ui.codexButton:SetShown(c ~= nil) end
 	if ui.refresh then ui.refresh:SetShown(mode ~= "pixel" or run.slotsExhausted or run.slotsMissing or run.pixelFailed or false) end
-	WoWAI.UpdateMini()
+	AzerMind.UpdateMini()
 end
 
 -- One message bubble: accent bar, colored label, timestamp, wrapped body.
+function AzerMind.DeleteMessage(chatId, entry)
+	local chat=FindChat(chatId)
+	if not chat then return false end
+	for index, message in ipairs(chat.history) do
+		if message==entry then
+			ui.deletedMessage={chat=chatId,entry=message,index=index}
+			table.remove(chat.history,index)
+			AzerMind.Render()
+			return true
+		end
+	end
+	return false
+end
+
+function AzerMind.UndoMessageDeletion()
+	local deleted=ui.deletedMessage
+	local chat=deleted and FindChat(deleted.chat)
+	if not chat or db.activeChat~=deleted.chat then return false end
+	table.insert(chat.history,math.min(deleted.index,#chat.history+1),deleted.entry)
+	ui.deletedMessage=nil
+	AzerMind.Render()
+	return true
+end
+
 local function GetBubble(i)
 	local b = ui.bubbles[i]
 	if b then return b end
@@ -1874,36 +2253,105 @@ local function GetBubble(i)
 	b.when = b:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 	b.when:SetPoint("TOPRIGHT", b, "TOPRIGHT", -8, -6)
 	b.body = b:CreateFontString(nil, "OVERLAY", "ChatFontNormal")
-	b.body:SetPoint("TOPLEFT", b.who, "BOTTOMLEFT", 0, -4)
+	b.body:SetPoint("TOPLEFT", b.who, "BOTTOMLEFT", 0, -12)
 	b.body:SetJustifyH("LEFT")
 	b.body:SetJustifyV("TOP")
 	b.body:SetWordWrap(true)
 	b.body:SetNonSpaceWrap(true)
+	if AzerMindTheme then AzerMindTheme.Type(b.body, "body") end
 	b.allow = CreateFrame("Button", nil, b, "UIPanelButtonTemplate")
 	b.allow:SetHeight(22)
 	b.allow:SetPoint("TOPLEFT", b.body, "BOTTOMLEFT", 0, -6)
 	b.allow:SetScript("OnClick", function(self)
-		WoWAI.Allow(self.chatId, self.rules)
+		AzerMind.Allow(self.chatId, self.rules)
 	end)
 	b.allow:Hide()
 	b.macroBtns = {}
+	local function Action(label, action)
+		local button = CreateFrame("Button", nil, b)
+		button:SetSize(28, 28); button:SetScript("OnClick", action)
+		local function Stroke(x, y, w, h)
+			local t = button:CreateTexture(nil, "ARTWORK")
+			t:SetPoint("TOPLEFT", button, "TOPLEFT", x, -y); t:SetSize(w, h)
+			t:SetColorTexture(0.90, 0.82, 0.65, 1)
+		end
+		local function Outline(x, y)
+			Stroke(x, y, 8, 1); Stroke(x, y+9, 8, 1); Stroke(x, y, 1, 10); Stroke(x+7, y, 1, 10)
+		end
+		if label == "Copy" then Outline(5, 3); Outline(8, 6)
+		elseif label == "Delete" then
+			Stroke(4, 5, 12, 1); Stroke(8, 3, 4, 1)
+			Stroke(5, 6, 1, 10); Stroke(14, 6, 1, 10); Stroke(5, 15, 10, 1)
+			Stroke(8, 8, 1, 5); Stroke(11, 8, 1, 5)
+		else
+			Stroke(5, 5, 10, 1); Stroke(4, 5, 1, 10); Stroke(5, 14, 10, 1)
+			Stroke(12, 3, 1, 5); Stroke(13, 4, 1, 3); Stroke(14, 5, 1, 1)
+		end
+		local glow = button:CreateTexture(nil, "HIGHLIGHT"); glow:SetAllPoints(); glow:SetColorTexture(1, 0.85, 0.5, 0.12)
+		button:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText(label, 0.91, 0.87, 0.78)
+			if label=="Delete" then GameTooltip:AddLine("Remove this message from local history. AI session memory is retained. Undo is available until the next deletion or UI reload.",1,1,1,true)
+			elseif label=="Resend" then GameTooltip:AddLine("Send this message again. While another request is running, wait or stop it first.",1,1,1,true) end
+			GameTooltip:Show()
+		end)
+		button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		return button
+	end
+	b.copy = Action("Copy", function(self)
+		local message = self:GetParent()
+		AzerMind.ShowCopy(message.copyText)
+	end)
+	b.resend = Action("Resend", function()
+		local chat = ActiveChat()
+		if not chat or chat.id~=b.chatId or b.role ~= "user" or not b.entry then return end
+		if chat.pendingId then if chat.pendingId == b.messageId then AzerMind.Resend() end; return end
+		AzerMind.Send(b.entry.text)
+	end)
+	b.delete = Action("Delete", function()
+		if b.entry then AzerMind.DeleteMessage(b.chatId,b.entry) end
+	end)
+	b.delete:SetPoint("TOPRIGHT", b, "TOPRIGHT", -6, -2)
+	b.resend:SetPoint("RIGHT", b.delete, "LEFT", -2, 0)
+	b.copy:SetPoint("RIGHT", b.resend, "LEFT", -2, 0)
+	b.when:ClearAllPoints(); b.when:SetPoint("TOPRIGHT", b, "TOPRIGHT", -102, -6)
+	b:SetScript("OnUpdate", function(self)
+		if self.activity then
+			local step = math.floor(GetTime() / 0.4) % 3 + 1
+			if self.activityStep ~= step then self.activityStep = step; self.body:SetText(self.activity .. string.rep(".", step)) end
+		end
+		self.copy:SetShown(self.canCopy)
+		self.resend:SetShown(self.canResend)
+		self.delete:SetShown(self.canCopy)
+	end)
 	-- FontStrings can't be selected, so a click opens the message in the copy box.
 	b:EnableMouse(true)
-	b:SetScript("OnMouseUp", function(self, button)
-		if button == "LeftButton" and self.text and self.text ~= "" then WoWAI.ShowCopy(self.text) end
-	end)
+	if AzerMind.SetupLinks then AzerMind.SetupLinks(b) end
 	ui.bubbles[i] = b
 	return b
 end
 
-function WoWAI.Render()
+function AzerMind.Render()
+	if ui.contextToggle then ui.contextToggle:SetText("Character context: " .. (not db.settings.context and "Off" or db.settings.contextMode == "full" and "Full" or db.settings.contextMode == "custom" and "Custom" or "Basic")) end
 	local c = ActiveChat()
+	if ui.undoDelete then ui.undoDelete:SetShown(c and ui.deletedMessage and ui.deletedMessage.chat==c.id or false)
+        if ui.listScroll then
+            ui.listScroll:ClearAllPoints()
+            ui.listScroll:SetPoint("TOPLEFT",ui.listNew,"BOTTOMLEFT",0,-30)
+            ui.listScroll:SetPoint("BOTTOMRIGHT",ui.listPanel,"BOTTOMRIGHT",-26,ui.undoDelete:IsShown() and 44 or 8)
+        end
+    end
+	if ui.codexSettings and (not c or ui.codexSettings.chatId ~= c.id) then ui.codexSettings:Hide() end
 	if ui.content and c then
+		local oldScroll=ui.scroll:GetVerticalScroll() or 0
+		local follow=ui.scrollChat~=c.id or oldScroll>=(ui.scroll:GetVerticalScrollRange() or 0)-24
+		ui.scrollChat=c.id
+		ui.renderVersion=(ui.renderVersion or 0)+1
+		local version=ui.renderVersion
 		local width = ui.scroll:GetWidth()
 		if not width or width < 80 then width = 400 end
 		ui.content:SetWidth(width)
 		local y, n = 0, 0
-		local function Place(role, text, when, dim, denied, agent, macros)
+		local function Place(role, text, when, dim, denied, agent, macros, messageId)
 			n = n + 1
 			local b = GetBubble(n)
 			local st = ROLE_STYLE[role] or ROLE_STYLE.system
@@ -1914,7 +2362,10 @@ function WoWAI.Render()
 			b.who:SetTextColor(st.color[1], st.color[2], st.color[3])
 			b.when:SetText(when or "")
 			b.body:SetWidth(width - 18)
-			b.body:SetText(Display(text))
+			local rendered
+			if AzerMind.RichMessage then rendered, b.sources = AzerMind.RichMessage(role, text)
+			else rendered, b.sources = Display(AzerMind.MessageText(role, text)), nil end
+			b.body:SetText(rendered)
 			if dim then
 				b.body:SetTextColor(0.72, 0.72, 0.72)
 			else
@@ -1941,7 +2392,7 @@ function WoWAI.Render()
 				if not mb then
 					mb = CreateFrame("Button", nil, b, "UIPanelButtonTemplate")
 					mb:SetHeight(22)
-					mb:SetScript("OnClick", function(self) WoWAI.InstallMacro(self.macro) end)
+					mb:SetScript("OnClick", function(self) AzerMind.InstallMacro(self.macro) end)
 					mb:SetScript("OnEnter", function(self)
 						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 						GameTooltip:AddLine(Display(self.macro.name))
@@ -1952,7 +2403,7 @@ function WoWAI.Render()
 					b.macroBtns[k] = mb
 				end
 				mb.macro = m
-				mb:SetText(WoWAI.MacroLabel(m))
+				mb:SetText(AzerMind.MacroLabel(m))
 				mb:SetWidth(math.min(width - 24, math.max(160, mb:GetFontString():GetStringWidth() + 30)))
 				mb:ClearAllPoints()
 				mb:SetPoint("TOPLEFT", b.body, "BOTTOMLEFT", 0, -6 - extra)
@@ -1961,7 +2412,21 @@ function WoWAI.Render()
 				shownMacros = k
 			end
 			for k = shownMacros + 1, #b.macroBtns do b.macroBtns[k]:Hide() end
-			b:SetHeight(6 + 12 + 4 + h + 8 + extra)
+			b.role, b.messageId = role, messageId
+			b.activity = dim and role == "assistant" and c.pendingId and AzerMind.PendingState(c) or nil
+			b.activityStep = nil
+			local canCopy = not dim
+			b.canCopy = canCopy
+			b.copyText = AzerMind.CopyMessage and AzerMind.CopyMessage(role, text) or AzerMind.MessageText(role, text)
+			b.entry = not dim and c.history[n] or nil
+			b.chatId=c.id
+			b.canResend = canCopy and role == "user"
+			b.resend:SetEnabled(not c.pendingId or c.pendingId == messageId)
+			b.latest = not dim and n == #c.history
+			b.copy:SetShown(b.canCopy)
+			b.resend:SetShown(b.canResend)
+			b.delete:SetShown(b.canCopy)
+			b:SetHeight(6 + 12 + 12 + h + 8 + extra)
 			b:ClearAllPoints()
 			b:SetPoint("TOPLEFT", ui.content, "TOPLEFT", 0, -y)
 			b.text = text
@@ -1972,20 +2437,17 @@ function WoWAI.Render()
 		for i, m in ipairs(c.history) do
 			-- The Allow button only makes sense on the newest reply, and only while idle.
 			local denied = (i == last and not c.pendingId and type(m.denied) == "table" and #m.denied > 0) and m.denied or nil
-			Place(m.role, m.text, m.t and date("%H:%M", m.t) or "", false, denied, m.agent, m.macros)
+			Place(m.role, m.text, m.t and date("%H:%M", m.t) or "", false, denied, m.agent, m.macros, m.id)
 		end
 		if c.pendingId then
-			local p = c.progress
-			local head = "working... " .. ActivityLine(c)
-			if run.statusText and run.statusText ~= "" then head = head .. "\n" .. run.statusText end
-			Place("assistant", (p and p ~= "") and (head .. "\n\n" .. p) or head, "", true, nil, ChatAgent(c))
+			Place("assistant", AzerMind.PendingState(c) .. "...", "", true, nil, ChatAgent(c))
 		elseif #c.history == 0 then
 			if run.restoring then
 				Place("system", "Connecting to the bridge and restoring your chats...", "", true)
-			elseif not WoWAI.IsConnected() then
-				Place("system", "Not connected to the bridge. Start it (npm start in the wow-ai folder, or wow-ai in your project), then click Connect below.", "", true)
+			elseif not AzerMind.IsConnected() then
+				Place("system", "Not connected to the bridge. Start it (npm start in the azermind folder, or azermind in your project), then click Connect below.", "", true)
 			else
-				Place("system", "Click the box below and type to start. Shift-click an item, spell or quest to link it into your message. /wow-ai help lists the commands; /ai <text> and /r work from the game chat too.", "", true)
+				Place("system", "Click the box below and type to start. Shift-click an item, spell or quest to link it into your message. /azermind help lists the commands; /ai <text> and /r work from the game chat too.", "", true)
 			end
 		end
 		for i = n + 1, #ui.bubbles do
@@ -1993,19 +2455,20 @@ function WoWAI.Render()
 		end
 		ui.content:SetHeight(math.max(y, 1))
 		C_Timer.After(0.05, function()
-			if ui.scroll then
-				ui.scroll:SetVerticalScroll(ui.scroll:GetVerticalScrollRange())
+			if ui.scroll and version==ui.renderVersion and db.activeChat==c.id then
+				ui.scroll:SetVerticalScroll(follow and ui.scroll:GetVerticalScrollRange() or math.min(oldScroll,ui.scroll:GetVerticalScrollRange()))
+				if ui.jumpLatest then ui.jumpLatest:SetShown(not follow) end
 			end
 		end)
 	end
-	WoWAI.UpdateStatus()
-	WoWAI.RenderChatList()
+	AzerMind.UpdateStatus()
+	AzerMind.RenderChatList()
 end
 
--- Copy box (/wow-ai copy): a selectable EditBox with the last reply pre-highlighted for Ctrl+C.
-function WoWAI.ShowCopy(text)
+-- Copy box (/azermind copy): a selectable EditBox with the last reply pre-highlighted for Ctrl+C.
+function AzerMind.ShowCopy(text)
 	if not ui.copy then
-		local cf = CreateFrame("Frame", "WoWAICopy", UIParent, "BackdropTemplate")
+		local cf = CreateFrame("Frame", "AzerMindCopy", UIParent, "BackdropTemplate")
 		cf:SetSize(560, 320)
 		cf:SetPoint("CENTER")
 		cf:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -2016,9 +2479,10 @@ function WoWAI.ShowCopy(text)
 		cf:SetScript("OnDragStart", cf.StartMoving)
 		cf:SetScript("OnDragStop", cf.StopMovingOrSizing)
 		cf:SetBackdrop(BACKDROP)
-		cf:SetBackdropColor(0.05, 0.05, 0.07, 0.97)
+		cf:SetBackdropColor(0.055, 0.049, 0.039, 1)
+		if AzerMindTheme then AzerMindTheme.Glow(cf, 0.20); AzerMindTheme.FitDialog(cf) end
 		cf:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
-		tinsert(UISpecialFrames, "WoWAICopy")
+		tinsert(UISpecialFrames, "AzerMindCopy")
 
 		local t = cf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		t:SetPoint("TOPLEFT", cf, "TOPLEFT", 14, -12)
@@ -2027,39 +2491,36 @@ function WoWAI.ShowCopy(text)
 		local x = CreateFrame("Button", nil, cf, "UIPanelCloseButton")
 		x:SetPoint("TOPRIGHT", cf, "TOPRIGHT", -4, -4)
 
-		local sc = CreateFrame("ScrollFrame", "WoWAICopyScroll", cf, "UIPanelScrollFrameTemplate")
+		local sc = CreateFrame("ScrollFrame", "AzerMindCopyScroll", cf, "UIPanelScrollFrameTemplate")
 		sc:SetPoint("TOPLEFT", cf, "TOPLEFT", 14, -36)
 		sc:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -32, 14)
-		local eb = CreateFrame("EditBox", "WoWAICopyBox", sc)
+		local eb = CreateFrame("EditBox", "AzerMindCopyBox", sc)
 		eb:SetMultiLine(true)
 		eb:SetAutoFocus(false)
 		eb:SetFontObject(ChatFontNormal)
+		if AzerMindTheme then AzerMindTheme.Type(eb, "body") end
 		eb:SetMaxLetters(0)
 		eb:SetSize(500, 260)
 		eb:SetScript("OnEscapePressed", function() cf:Hide() end)
 		sc:SetScrollChild(eb)
 		sc:HookScript("OnSizeChanged", function(self, w) eb:SetWidth(w) end)
 		ui.copy, ui.copyBox = cf, eb
+		cf:SetScript("OnHide",function() eb:ClearFocus() end)
 	end
 	ui.copyBox:SetText(text)
+	ui.copy:SetFrameLevel((ui.frame and ui.frame:GetFrameLevel() or 1)+240)
 	ui.copy:Show()
 	ui.copyBox:SetFocus()
 	ui.copyBox:HighlightText()
 end
 
-function WoWAI.RenderChatList()
+function AzerMind.RenderChatList()
 	if not ui.chatButtons then return end
+	if ui.chatListContent then ui.chatListContent:SetHeight(math.max(1, #db.chats * 34)) end
 	for i, btn in ipairs(ui.chatButtons) do
 		local c = db.chats[i]
 		if c then
 			local label = Display(c.name)
-			local folder = FolderName(ChatFolder(c))
-			if folder ~= "" and folder:lower() ~= c.name:lower() then
-				label = label .. " |cff888888" .. Display(folder) .. "|r"
-			end
-			if c.agent and c.agent ~= "" then
-				label = label .. " |cff888888" .. AgentName(c.agent) .. "|r"
-			end
 			if c.pendingId then
 				label = label .. " |cffffd100...|r"
 			elseif (c.unread or 0) > 0 then
@@ -2068,6 +2529,7 @@ function WoWAI.RenderChatList()
 			btn.label:SetText(label)
 			btn.chatId = c.id
 			btn.selected:SetShown(c.id == db.activeChat)
+			if btn.activeBar then btn.activeBar:SetShown(c.id == db.activeChat) end
 			btn:Show()
 		else
 			btn:Hide()
@@ -2075,7 +2537,7 @@ function WoWAI.RenderChatList()
 	end
 end
 
-function WoWAI.UpdateMini()
+function AzerMind.UpdateMini()
 	if not ui.miniBadge then return end
 	local unread, working = 0, 0
 	for _, c in ipairs(db.chats) do
@@ -2103,10 +2565,10 @@ function WoWAI.UpdateMini()
 	end
 end
 
-local ECHO_DEFAULT = 4000 -- characters of a reply to print into the game chat ("/wow-ai echo <n>")
+local ECHO_DEFAULT = 4000 -- characters of a reply to print into the game chat ("/azermind echo <n>")
 
 local function ChatLinks(chat)
-	return "  |Hwowai:reply:" .. chat.id .. "|h|cff55ff55[reply]|r|h |Hwowai:open:" .. chat.id .. "|h|cff7ec8ff[open]|r|h"
+	return "  |Hazermind:reply:" .. chat.id .. "|h|cff55ff55[reply]|r|h |Hazermind:open:" .. chat.id .. "|h|cff7ec8ff[open]|r|h"
 end
 
 local SUMMARY_LINES = 3 -- lines of the agent's TL;DR block printed in "summary" mode
@@ -2165,9 +2627,11 @@ end
 
 -- A reply landed. Always play the sound and echo it to the game chat; if that
 -- chat isn't on screen, also flash the screen text and light up the mini bar.
-function WoWAI.Notify(chat, text, agent, summary)
-	pcall(PlaySound, 3081)
-	WoWAI.UpdateMini()
+function AzerMind.Notify(chat, text, agent, summary)
+	local sound=db.settings.replySound
+    if sound==nil then sound=3081 end
+    if sound~=0 then pcall(PlaySound,sound,"Master") end
+	AzerMind.UpdateMini()
 	-- Until a real whisper arrives, /r replies to this chat.
 	run.lastMessenger = "agent"
 	run.lastReplyChat = chat.id
@@ -2207,11 +2671,11 @@ local function SendBoxToAgent(eb)
 	local text = Trim(eb:GetText() or "")
 	eb.agentTarget = nil
 	eb:ClearChat()
-	if chat and db.activeChat ~= chat.id then WoWAI.SwitchChat(chat.id) end
+	if chat and db.activeChat ~= chat.id then AzerMind.SwitchChat(chat.id) end
 	if text ~= "" then
-		WoWAI.Send(text)
+		AzerMind.Send(text)
 	else
-		WoWAI.Toggle(true)
+		AzerMind.Toggle(true)
 		if ui.input then ui.input:SetFocus() end
 	end
 end
@@ -2271,10 +2735,10 @@ end
 
 -- Clicks on our [reply] / [open] links in the chat frame.
 hooksecurefunc("SetItemRef", function(link)
-	local action, chatId = tostring(link):match("^wowai:(%a+):(%w+)")
+	local action, chatId = tostring(link):match("^azermind:(%a+):(%w+)")
 	if not action or not db then return end
-	if FindChat(chatId) then WoWAI.SwitchChat(chatId) end
-	WoWAI.Toggle(true)
+	if FindChat(chatId) then AzerMind.SwitchChat(chatId) end
+	AzerMind.Toggle(true)
 	if action == "reply" and ui.input then ui.input:SetFocus() end
 end)
 
@@ -2288,6 +2752,7 @@ end)
 -- name, hooked only where the new one is missing so one click inserts once.
 local function TakeLink(text)
 	if text and text ~= "" and ui.input and ui.input:HasFocus() then
+		if AzerMind.NormalizeItemLink then text = AzerMind.NormalizeItemLink(text) end
 		ui.input:Insert(text)
 	end
 end
@@ -2301,7 +2766,8 @@ end
 -- UI
 ---------------------------------------------------------------------------
 
-local function MakeButton(parent, label, width, onClick)
+local function MakeButton(parent, label, width, onClick, plain)
+	if AzerMindTheme then return AzerMindTheme.Button(parent, label, width, 22, onClick, nil, plain) end
 	local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	b:SetSize(width, 22)
 	b:SetText(label)
@@ -2309,14 +2775,113 @@ local function MakeButton(parent, label, width, onClick)
 	return b
 end
 
-local PANEL_W = 150
+-- Keep overrides scoped to the provider; old Codex choices remain compatible.
+function AzerMind.ChatAISettings(c, agent)
+	local id = agent or ChatAgent(c)
+	if c.aiSettings and c.aiSettings[id] then return c.aiSettings[id] end
+	if id == "codex" then return {model=c.codexModel, reasoning=c.codexReasoning} end
+	return {}
+end
+function AzerMind.SettingsState(id, agent)
+	local c = (id and FindChat(id)) or ActiveChat()
+	local defaults = run.aiDefaults or {agent=run.bridgeAgent or "codex",model="",reasoning=""}
+	local selected = agent or (c and ChatAgent(c)) or defaults.agent
+	local meta = run.agentSettings and run.agentSettings[selected]
+	local models = meta and meta.models or (selected == "codex" and run.codexModels or {}) or {}
+	return c, defaults, models, run.bridgeAgents or {"codex","claude","grok","agy","hermes"}, run.settingsPending,
+		meta or {model="",reasoning="",efforts=selected == "codex" and {"low","medium","high"} or {} }
+end
+
+function AzerMind.AttachSettingsPanel(panel)
+	ui.codexSettings = panel
+end
+
+function AzerMind.ModelEfforts(agent,model)
+	local _,_,models,_,_,meta=AzerMind.SettingsState(nil,agent)
+	local selected=model~="" and model or meta.model
+	for _,entry in ipairs(models) do
+		if entry.model==selected then return entry.efforts or {},entry.effortsKnown~=false end
+	end
+	return {},false
+end
+
+function AzerMind.RefreshModelChoices()
+	if not AzerMind.IsConnected() or db.settings.mode~="pixel" then return false,"Connect the bridge in pixel mode to refresh models." end
+	if run.modelsPending or run.settingsPending then return false,"Wait for the current settings request." end
+	local chat=ActiveChat(); if not chat then return false,"Conversation no longer exists." end
+	db.lastSeq=db.lastSeq+1
+	local seq=db.lastSeq
+	run.outbound[seq]={chat=chat.id,cwd="",flags="settings",name="Refresh models",text='{"action":"refresh-models"}',sentAt=GetTime(),catalogRefresh=true}
+	run.modelsPending=seq; RefreshStrip()
+	return true,"Refreshing model choices..."
+end
+
+function AzerMind.SaveAISettings(id, scope, values)
+	local c = (id and FindChat(id)) or ActiveChat()
+	if not c then return false, "Conversation no longer exists." end
+	if values.model ~= "" and (not values.model:match("^[%w][%w_./:@+%[%]%-]*$") or #values.model > 200) then
+		return false, "Enter a model ID without spaces or control characters."
+	end
+	if not (scope=="conversation" and values.inherit) and values.reasoning~="" then
+		local efforts,known=AzerMind.ModelEfforts(values.agent,values.model)
+		local valid=false; for _,effort in ipairs(efforts) do if effort==values.reasoning then valid=true end end
+		if not known or not valid then return false,"Select a reasoning level supported by this model, or use Automatic." end
+	end
+	if scope == "conversation" then
+		if c.pendingId then return false, "Wait for the current reply before saving." end
+		c.agent = values.inherit and "" or values.agent
+		c.aiSettings = c.aiSettings or {}
+		c.aiSettings[values.agent] = {model=values.inherit and "" or values.model, reasoning=values.inherit and "" or values.reasoning}
+		if values.agent == "codex" then
+			c.codexModel = values.inherit and "" or values.model
+			c.codexReasoning = values.inherit and "" or values.reasoning
+		end
+		c.resetNext = true
+		AzerMind.Render()
+		return true, "Conversation settings saved. Next message starts a fresh session."
+	end
+	if not AzerMind.IsConnected() or db.settings.mode ~= "pixel" then return false, "Connect the bridge in pixel mode before saving defaults." end
+	if run.settingsPending or run.modelsPending then return false, "Waiting for the current settings request." end
+	db.lastSeq = db.lastSeq + 1
+	local seq = db.lastSeq
+	local function Json(s) return '"' .. tostring(s):gsub('\\', '\\\\'):gsub('"', '\\"') .. '"' end
+	local text = '{"agent":' .. Json(values.agent) .. ',"model":' .. Json(values.model) .. ',"reasoning":' .. Json(values.reasoning) .. '}'
+	run.outbound[seq] = { chat = c.id, cwd = "", flags = "settings", name = "AI settings", text = text, sentAt = GetTime(), settings = true }
+	run.settingsPending = seq
+	RefreshStrip()
+	return true, "Saving defaults... waiting for bridge confirmation."
+end
+
+local PANEL_W = 240
+
+local function WindowBounds()
+	local maxWidth = math.min(1200, UIParent:GetWidth() * 0.90)
+	local maxHeight = math.min(850, UIParent:GetHeight() * 0.90)
+	return math.min(640, maxWidth), math.min(380, maxHeight), maxWidth, maxHeight
+end
+
+function AzerMind.ResetUI()
+	if not ui.frame then return end
+	local minW, minH, maxW, maxH = WindowBounds()
+	local s = db.settings
+	s.width, s.height = math.max(minW, math.min(820, maxW)), math.max(minH, math.min(540, maxH))
+	s.point, s.relPoint, s.x, s.y = "CENTER", "CENTER", 0, 0
+	ui.frame:StopMovingOrSizing()
+	ui.frame:ClearAllPoints()
+	ui.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+	ui.frame:SetSize(s.width, s.height)
+	AzerMind.Toggle(true)
+	AzerMind.Render()
+end
 
 local function BuildUI()
 	if ui.frame then return end
 	local s = db.settings
 
-	local f = CreateFrame("Frame", "WoWAIFrame", UIParent, "BackdropTemplate")
+	local f = CreateFrame("Frame", "AzerMindFrame", UIParent, "BackdropTemplate")
 	ui.frame = f
+	local minW, minH, maxW, maxH = WindowBounds()
+	s.width, s.height = math.max(minW, math.min(s.width, maxW)), math.max(minH, math.min(s.height, maxH))
 	f:SetSize(s.width, s.height)
 	if s.point then
 		f:SetPoint(s.point, UIParent, s.relPoint or s.point, s.x or 0, s.y or 0)
@@ -2327,7 +2892,7 @@ local function BuildUI()
 	f:SetMovable(true)
 	f:SetResizable(true)
 	f:SetClampedToScreen(true)
-	f:SetResizeBounds(560, 300)
+	f:SetResizeBounds(minW, minH, maxW, maxH)
 	f:EnableMouse(true)
 	f:RegisterForDrag("LeftButton")
 	f:SetScript("OnDragStart", f.StartMoving)
@@ -2337,10 +2902,11 @@ local function BuildUI()
 		s.point, s.relPoint, s.x, s.y = point, relPoint, x, y
 	end)
 	f:SetBackdrop(BACKDROP)
-	f:SetBackdropColor(0.05, 0.05, 0.07, 0.95)
+	f:SetBackdropColor(0.055, 0.049, 0.039, 0.97)
+	if AzerMindTheme then AzerMindTheme.Glow(f, 0.24) end
 	f:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
 	f:Hide()
-	tinsert(UISpecialFrames, "WoWAIFrame")
+	tinsert(UISpecialFrames, "AzerMindFrame")
 
 	-- Status light: green = bridge seen recently, yellow = stale, red = gone.
 	local function MakeDot(parent)
@@ -2364,13 +2930,21 @@ local function BuildUI()
 	ui.dot = dot
 
 	local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	title:SetPoint("LEFT", dotHolder, "RIGHT", 6, 0)
-	title:SetText("WoW AI")
+	if AzerMindTheme then AzerMindTheme.Type(title, "title") end
+	title:SetPoint("TOPLEFT", f, "TOPLEFT", PANEL_W + 22, -17)
+	title:SetText("AzerMind")
 	ui.title = title
+	local latency = f:CreateFontString("AzerMindLatency", "OVERLAY", "GameFontHighlightSmall")
+	latency:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -37)
+	latency:SetTextColor(0.55, 0.55, 0.52, 1)
+	latency:SetWordWrap(false)
+	ui.latency = latency
+	AzerMind.UpdateLatency()
 
 	local status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	status:SetPoint("TOPLEFT", f, "TOPLEFT", 14, -34)
-	status:SetPoint("RIGHT", f, "RIGHT", -60, 0)
+	status:SetPoint("LEFT", dotHolder, "RIGHT", 4, 0)
+	status:SetWidth(PANEL_W - 24)
+	status:SetWordWrap(false)
 	status:SetJustifyH("LEFT")
 	ui.status = status
 
@@ -2379,12 +2953,10 @@ local function BuildUI()
 	-- The mini bar's own X is the one that hides everything.
 	local mini
 	if C_Texture and C_Texture.GetAtlasExists and C_Texture.GetAtlasExists("RedButton-MiniCondense") then
-		-- Blizzard's own minimize button: the close button's chrome with a "condense" glyph.
 		local ok, b = pcall(CreateFrame, "Button", nil, f, "UIPanelHideButtonNoScripts")
 		if ok and b then mini = b end
 	end
 	if not mini then
-		-- Older art: draw a dash on a plain button.
 		mini = CreateFrame("Button", nil, f)
 		mini:SetSize(24, 24)
 		local dash = mini:CreateTexture(nil, "ARTWORK")
@@ -2396,10 +2968,10 @@ local function BuildUI()
 		hl:SetColorTexture(1, 1, 1, 0.15)
 	end
 	mini:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
-	mini:SetScript("OnClick", function() WoWAI.Minimize(true) end)
+	mini:SetScript("OnClick", function() AzerMind.Minimize(true) end)
 	mini:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-		GameTooltip:SetText("Minimize to the small bar  (Esc)")
+		GameTooltip:SetText("Minimize to the small bar  (Esc)", 0.91, 0.87, 0.78)
 		GameTooltip:AddLine("The agent keeps working; the bar shows when a reply lands.", 0.8, 0.8, 0.8, true)
 		GameTooltip:Show()
 	end)
@@ -2408,6 +2980,7 @@ local function BuildUI()
 	-- Esc (via UISpecialFrames) just calls Hide(); treat that as a minimize unless
 	-- we're hiding on purpose. Ignore hides caused by the whole UI going away.
 	f:SetScript("OnHide", function()
+		if ui.input then ui.input:ClearFocus() end
 		if ui.quitting then
 			ui.quitting = nil
 			return
@@ -2415,13 +2988,13 @@ local function BuildUI()
 		if not db or not db.settings.shown or not UIParent:IsShown() then return end
 		db.settings.minimized = true
 		if ui.mini then ui.mini:Show() end
-		WoWAI.UpdateMini()
+		AzerMind.UpdateMini()
 	end)
 
 	-- Left panel: chat list
 	local panel = CreateFrame("Frame", nil, f, "BackdropTemplate")
 	panel:SetPoint("TOPLEFT", f, "TOPLEFT", 14, -52)
-	panel:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 50)
+	panel:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 18)
 	panel:SetWidth(PANEL_W)
 	panel:SetBackdrop({
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -2429,17 +3002,32 @@ local function BuildUI()
 		tile = true, tileSize = 16, edgeSize = 12,
 		insets = { left = 3, right = 3, top = 3, bottom = 3 },
 	})
-	panel:SetBackdropColor(0, 0, 0, 0.4)
+	panel:SetBackdropColor(0.055, 0.049, 0.039, 1)
+	if AzerMindTheme then AzerMindTheme.Surface(panel, "panel") end
 	panel:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 
-	local newBtn = MakeButton(panel, "+ New chat", PANEL_W - 16, function() WoWAI.NewChat() end)
+	local newBtn = MakeButton(panel, "+ New chat", PANEL_W - 16, function() AzerMind.NewChat() end)
 	newBtn:SetPoint("TOP", panel, "TOP", 0, -8)
+	newBtn:SetHeight(30)
+	local listTitle = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	listTitle:SetPoint("TOPLEFT", newBtn, "BOTTOMLEFT", 4, -12)
+	listTitle:SetText("CONVERSATIONS")
+	local listScroll = CreateFrame("ScrollFrame", "AzerMindConversationScroll", panel, "UIPanelScrollFrameTemplate")
+	listScroll:SetPoint("TOPLEFT", newBtn, "BOTTOMLEFT", 0, -30)
+	listScroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -26, 8)
+    ui.listScroll=listScroll; ui.listNew=newBtn; ui.listPanel=panel
+	ui.undoDelete=MakeButton(panel,"Undo deletion",PANEL_W-16,AzerMind.UndoMessageDeletion)
+	ui.undoDelete:SetPoint("BOTTOM",panel,"BOTTOM",0,8); ui.undoDelete:Hide()
+	local listContent = CreateFrame("Frame", nil, listScroll)
+	listContent:SetSize(PANEL_W - 34, MAX_CHATS * 34)
+	listScroll:SetScrollChild(listContent)
+	ui.chatListContent = listContent
 
 	-- Per-chat menu: Rename, Folder and Agent, opened by right-clicking a chat
 	-- row. A plain frame of our own rather than a Blizzard dropdown, so it looks
 	-- the same on every client.
-	local menu = CreateFrame("Frame", "WoWAIChatMenu", f, "BackdropTemplate")
-	menu:SetSize(110, 4 * 20 + 12)
+	local menu = CreateFrame("Frame", "AzerMindChatMenu", f, "BackdropTemplate")
+	menu:SetSize(150, 6 * 20 + 12)
 	menu:SetFrameStrata("TOOLTIP")
 	menu:SetBackdrop({
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -2447,7 +3035,7 @@ local function BuildUI()
 		tile = true, tileSize = 16, edgeSize = 12,
 		insets = { left = 3, right = 3, top = 3, bottom = 3 },
 	})
-	menu:SetBackdropColor(0.08, 0.08, 0.1, 0.97)
+	menu:SetBackdropColor(0.085, 0.075, 0.058, 1)
 	menu:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
 	menu:EnableMouse(true)
 	menu.title = menu:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -2457,8 +3045,8 @@ local function BuildUI()
 	menu.title:SetWordWrap(false)
 	local function MenuItem(label, order, onClick)
 		local it = CreateFrame("Button", nil, menu)
-		it:SetSize(110 - 12, 20)
-		it:SetPoint("TOPLEFT", menu, "TOPLEFT", 6, -6 - order * 20)
+		it:SetSize(180 - 12, 24)
+		it:SetPoint("TOPLEFT", menu, "TOPLEFT", 6, -6 - order * 24)
 		local hl = it:CreateTexture(nil, "HIGHLIGHT")
 		hl:SetAllPoints()
 		hl:SetColorTexture(1, 1, 1, 0.12)
@@ -2471,9 +3059,23 @@ local function BuildUI()
 		end)
 		return it
 	end
-	MenuItem("Rename...", 1, WoWAI.RenamePrompt)
-	MenuItem("Folder...", 2, WoWAI.FolderPrompt)
-	MenuItem("Agent...", 3, WoWAI.AgentPrompt)
+	MenuItem("Rename...", 1, AzerMind.RenamePrompt)
+	MenuItem("Folder...", 2, AzerMind.FolderPrompt)
+	MenuItem("Agent...", 3, AzerMind.AgentPrompt)
+	MenuItem("Clear local history", 4, function(id)
+		local chat = FindChat(id)
+		if chat then wipe(chat.history) end
+		if ui.deletedMessage and ui.deletedMessage.chat==id then ui.deletedMessage=nil end
+		AzerMind.Render()
+	end)
+	local codexItem = MenuItem("AI settings...", 5, AzerMind.CodexPrompt)
+	MenuItem("Reset AI session",6,function(id)
+		local chat=FindChat(id)
+		if not chat then return end
+		chat.resetNext=true
+		AddHistory(chat,"system","The next message starts a fresh AI session. Local history is kept.")
+		AzerMind.Render()
+	end)
 	-- Close once the mouse has wandered away from the menu and the row it came from.
 	menu:SetScript("OnUpdate", function(self, dt)
 		if not MouseIsOver then return end
@@ -2487,7 +3089,7 @@ local function BuildUI()
 	menu:Hide()
 	ui.chatMenu = menu
 
-	function WoWAI.ShowChatMenu(chatId, anchor)
+	function AzerMind.ShowChatMenu(chatId, anchor)
 		local c = FindChat(chatId)
 		if not c then return end
 		if menu:IsShown() and menu.chatId == chatId then
@@ -2495,6 +3097,8 @@ local function BuildUI()
 			return
 		end
 		menu.chatId = chatId
+		codexItem:Show()
+		menu:SetSize(180, 7 * 24 + 12)
 		menu.owner = anchor
 		menu.away = 0
 		menu.title:SetText(Display(c.name))
@@ -2505,87 +3109,97 @@ local function BuildUI()
 
 	ui.chatButtons = {}
 	for i = 1, MAX_CHATS do
-		local b = CreateFrame("Button", nil, panel)
-		b:SetSize(PANEL_W - 16, 20)
-		b:SetPoint("TOP", newBtn, "BOTTOM", 0, -6 - (i - 1) * 21)
+		local b = CreateFrame("Button", nil, listContent)
+		b:SetSize(PANEL_W - 34, 30)
+		b:SetPoint("TOPLEFT", listContent, "TOPLEFT", 0, -(i - 1) * 34)
 		b.selected = b:CreateTexture(nil, "BACKGROUND")
 		b.selected:SetAllPoints()
-		b.selected:SetColorTexture(1, 1, 1, 0.12)
+		b.selected:SetColorTexture(0.12, 0.24, 0.23, 1)
 		b.selected:Hide()
+		b.activeBar = b:CreateTexture(nil, "BORDER")
+		b.activeBar:SetPoint("TOPLEFT"); b.activeBar:SetPoint("BOTTOMLEFT"); b.activeBar:SetWidth(2)
+		b.activeBar:SetColorTexture(0.60, 0.90, 0.95, 1); b.activeBar:Hide()
 		local hl = b:CreateTexture(nil, "HIGHLIGHT")
 		hl:SetAllPoints()
-		hl:SetColorTexture(1, 1, 1, 0.08)
+		hl:SetColorTexture(0.60, 0.90, 0.95, 0.08)
 
 		-- Trash can: delete this chat (asks first). Blizzard's red delete button
 		-- where the client has it, a plain X elsewhere.
-		b.del = CreateFrame("Button", nil, b)
-		b.del:SetSize(16, 16)
-		b.del:SetPoint("RIGHT", b, "RIGHT", -2, 0)
-		if C_Texture and C_Texture.GetAtlasExists and C_Texture.GetAtlasExists("128-RedButton-Delete") then
-			b.del:SetNormalAtlas("128-RedButton-Delete")
-			b.del:SetPushedAtlas("128-RedButton-Delete-Pressed")
-			b.del:SetHighlightAtlas("128-RedButton-Delete-Highlight")
-		else
-			b.del:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-			b.del:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
-		end
-		b.del:SetAlpha(0.6)
-		b.del:SetScript("OnClick", function() WoWAI.ConfirmDelete(b.chatId) end)
+		b.del = MakeButton(b, "", 24, function() AzerMind.ConfirmDelete(b.chatId) end)
+		if AzerMindTheme then AzerMindTheme.Icon(b.del,"delete",4,-4) else b.del:SetText("Delete") end
+		b.del:SetSize(24, 24)
+		b.del:SetPoint("RIGHT", b, "RIGHT", -3, 0)
+		b.menu=MakeButton(b,"...",24,function() AzerMind.ShowChatMenu(b.chatId,b) end)
+		b.menu:SetPoint("RIGHT",b.del,"LEFT",-2,0)
+		if AzerMindTheme then AzerMindTheme.Tooltip(b.menu,"Conversation actions","Rename, folder, agent, local history and AI settings.") end
+		b.del:SetAlpha(1)
+		b.del:SetScript("OnClick", function() AzerMind.ConfirmDelete(b.chatId) end)
 		b.del:SetScript("OnEnter", function(self)
 			self:SetAlpha(1)
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetText("Delete this chat")
+			GameTooltip:SetText("Delete this chat", 0.91, 0.87, 0.78)
 			GameTooltip:Show()
 		end)
 		b.del:SetScript("OnLeave", function(self)
-			self:SetAlpha(0.6)
+			self:SetAlpha(1)
 			GameTooltip:Hide()
 		end)
 
 		b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		b.label:SetPoint("LEFT", b, "LEFT", 6, 0)
-		b.label:SetPoint("RIGHT", b.del, "LEFT", -4, 0)
+		if AzerMindTheme then AzerMindTheme.Type(b.label, "conversation") end
+		b.label:SetPoint("LEFT", b, "LEFT", 9, 0)
+		b.label:SetTextColor(0.93, 0.91, 0.85)
+		b.label:SetPoint("RIGHT", b.menu, "LEFT", -4, 0)
 		b.label:SetJustifyH("LEFT")
 		b.label:SetWordWrap(false)
+		b:SetScript("OnEnter", function(self)
+			local chat = FindChat(self.chatId)
+			if chat then GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:SetText(Display(chat.name), 0.91, 0.87, 0.78); GameTooltip:AddLine("Right-click for conversation actions", 0.7, 0.7, 0.7); GameTooltip:Show() end
+		end)
+		b:SetScript("OnLeave", function() GameTooltip:Hide() end)
 		-- Left-click switches to the chat; right-click opens its menu (Rename,
 		-- Folder, Agent). A second right-click on the same row closes the menu again.
 		b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 		b:SetScript("OnClick", function(self, button)
 			if button == "RightButton" then
-				WoWAI.ShowChatMenu(self.chatId, self)
+				AzerMind.ShowChatMenu(self.chatId, self)
 			else
-				WoWAI.SwitchChat(self.chatId)
+				AzerMind.SwitchChat(self.chatId)
 			end
 		end)
 		b:SetScript("OnDoubleClick", function(self)
-			WoWAI.SwitchChat(self.chatId)
-			WoWAI.RenamePrompt(self.chatId)
+			AzerMind.SwitchChat(self.chatId)
+			AzerMind.RenamePrompt(self.chatId)
 		end)
 		b:Hide()
 		ui.chatButtons[i] = b
 	end
 
 	-- Transcript: a scrolling stack of message bubbles
-	local scroll = CreateFrame("ScrollFrame", "WoWAIScroll", f, "UIPanelScrollFrameTemplate")
+	local scroll = CreateFrame("ScrollFrame", "AzerMindScroll", f, "UIPanelScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", panel, "TOPRIGHT", 8, 0)
-	scroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -32, 110)
+	scroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -32, 188)
 	ui.scroll = scroll
+	ui.jumpLatest=MakeButton(f,"Jump to latest",140,function()
+		scroll:SetVerticalScroll(scroll:GetVerticalScrollRange()); ui.jumpLatest:Hide()
+	end)
+	ui.jumpLatest:SetPoint("BOTTOMRIGHT",scroll,"BOTTOMRIGHT",-8,4); ui.jumpLatest:Hide()
 
-	local content = CreateFrame("Frame", "WoWAIContent", scroll)
+	local content = CreateFrame("Frame", "AzerMindContent", scroll)
 	content:SetSize(500, 1)
 	scroll:SetScrollChild(content)
 	ui.content = content
 	ui.bubbles = {}
 	scroll:HookScript("OnSizeChanged", function(self, w, h)
-		if ui.frame:IsShown() then WoWAI.Render() end
+		if ui.frame:IsShown() then AzerMind.Render() end
 	end)
 
 	-- Input box, with Send docked at its right end like a messaging app.
 	local SEND_W = 84
 	local inputBg = CreateFrame("Frame", nil, f, "BackdropTemplate")
-	inputBg:SetPoint("BOTTOMLEFT", panel, "BOTTOMRIGHT", 8, 0)
-	inputBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -14 - SEND_W - 6, 50)
-	inputBg:SetHeight(54)
+	inputBg:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", PANEL_W + 22, 18)
+	inputBg:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -14 - SEND_W - 6, 18)
+	inputBg:SetHeight(130)
 	inputBg:SetBackdrop({
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -2595,17 +3209,24 @@ local function BuildUI()
 	inputBg:SetBackdropColor(0, 0, 0, 0.6)
 	inputBg:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 
-	local inScroll = CreateFrame("ScrollFrame", "WoWAIInputScroll", inputBg, "UIPanelScrollFrameTemplate")
+	local inScroll = CreateFrame("ScrollFrame", "AzerMindInputScroll", inputBg, "UIPanelScrollFrameTemplate")
 	inScroll:SetPoint("TOPLEFT", inputBg, "TOPLEFT", 8, -6)
 	inScroll:SetPoint("BOTTOMRIGHT", inputBg, "BOTTOMRIGHT", -24, 6)
 
-	local input = CreateFrame("EditBox", "WoWAIInput", inScroll)
+	local input = CreateFrame("EditBox", "AzerMindInput", inScroll)
 	input:SetMultiLine(true)
+	if AzerMind.SetupLinks then
+		AzerMind.SetupLinks(input)
+		AzerMind.SetupLinks(inScroll)
+	end
 	input:SetAutoFocus(false)
 	input:SetFontObject(ChatFontNormal)
+	if AzerMindTheme then AzerMindTheme.Type(input, "body") end
 	input:SetMaxLetters(0)
-	input:SetSize(500, 40)
-	input:SetScript("OnEnterPressed", function() WoWAI.SendFromInput() end)
+	input:SetSize(500, 116)
+	input:SetScript("OnEnterPressed", function(self)
+		if IsShiftKeyDown and IsShiftKeyDown() then self:Insert("\n") else AzerMind.SendFromInput() end
+	end)
 	input:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 	inScroll:SetScrollChild(input)
 	inScroll:HookScript("OnSizeChanged", function(self, w, h)
@@ -2613,21 +3234,83 @@ local function BuildUI()
 	end)
 	inputBg:SetScript("OnMouseDown", function() input:SetFocus() end)
 	ui.input = input
+	local equipment = MakeButton(f, "Items", 80, function() if AzerMind.ShowItemPicker then AzerMind.ShowItemPicker() end end)
+	equipment:SetPoint("BOTTOMLEFT", inputBg, "TOPLEFT", 0, 6)
+	equipment:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText("Attach items", 0.91, 0.87, 0.78)
+		GameTooltip:AddLine("Browse your inventory or the item database. Select items to add to your message. Nothing is sent yet.", 0.75, 0.75, 0.75, true)
+		GameTooltip:Show()
+	end)
+	equipment:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	local quests = MakeButton(f, "Quests", 88, function() if AzerMind.ShowQuestPicker then AzerMind.ShowQuestPicker() end end)
+	quests:SetPoint("LEFT", equipment, "RIGHT", 8, 0)
+	quests:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText("Attach quests", 0.91, 0.87, 0.78)
+		GameTooltip:AddLine("Browse your quest log or the quest database. Select quests to add to your message. Nothing is sent yet.", 0.75, 0.75, 0.75, true); GameTooltip:Show()
+	end)
+	quests:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	ui.contextToggle = MakeButton(f, "Character context: " .. (db.settings.contextMode == "full" and "Full" or db.settings.contextMode == "custom" and "Custom" or "Basic"), 230, function()
+		AzerMind.ShowContextSettings()
+	end)
+	ui.contextToggle:SetPoint("LEFT", quests, "RIGHT", 8, 0)
+	ui.contextToggle:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText("Share character context")
+		GameTooltip:AddLine("Choose which character data to share. Applies to future messages in every conversation. Open to customize or preview.", 0.75, 0.75, 0.75, true); GameTooltip:Show()
+	end)
+	ui.contextToggle:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	local instancesButton=MakeButton(f,"Dungeons & Raids",198,function() AzerMind.ShowInstancePicker() end)
+	if AzerMindTheme then
+		AzerMindTheme.IconLabel(equipment,"items"); AzerMindTheme.IconLabel(quests,"quests")
+		AzerMindTheme.IconLabel(instancesButton,"instances"); AzerMindTheme.IconLabel(ui.contextToggle,"character")
+	end
+	for _,button in ipairs({equipment,quests,instancesButton,ui.contextToggle}) do button:SetHeight(28) end
+	local function LayoutComposerActions()
+		local available=f:GetWidth()-PANEL_W-36
+		local buttons={equipment,quests,instancesButton,ui.contextToggle}
+		for _,button in ipairs(buttons) do button:ClearAllPoints() end
+		equipment:SetPoint("BOTTOMLEFT",inputBg,"TOPLEFT",0,6)
+		quests:SetPoint("LEFT",equipment,"RIGHT",8,0)
+		instancesButton:SetPoint("LEFT",quests,"RIGHT",8,0)
+		local twoRows=available<636
+		if twoRows then ui.contextToggle:SetPoint("BOTTOMLEFT",equipment,"TOPLEFT",0,6)
+		else ui.contextToggle:SetPoint("LEFT",instancesButton,"RIGHT",24,0) end
+		scroll:ClearAllPoints()
+		scroll:SetPoint("TOPLEFT",panel,"TOPRIGHT",8,0)
+		scroll:SetPoint("BOTTOMRIGHT",f,"BOTTOMRIGHT",-32,twoRows and 220 or 188)
+	end
+	f:HookScript("OnSizeChanged",LayoutComposerActions)
+	LayoutComposerActions()
+
+
+	local clearDraft = MakeButton(f, "Clear draft", SEND_W, AzerMind.ClearDraft)
+	clearDraft:SetHeight(28)
+	clearDraft:SetPoint("BOTTOMLEFT", inputBg, "BOTTOMRIGHT", 6, 0)
+	clearDraft:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText("Clear draft", 0.91, 0.87, 0.78)
+		GameTooltip:AddLine("Clears only the message you are writing, including attached equipment. Conversation history is kept.", 0.75, 0.75, 0.75, true)
+		GameTooltip:Show()
+	end)
+	clearDraft:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	-- Send sits to the right of the input box, vertically centred on it.
-	local send = MakeButton(f, "Send", SEND_W, WoWAI.SendFromInput)
-	send:SetHeight(30)
-	send:SetPoint("LEFT", inputBg, "RIGHT", 6, 0)
+	local send = MakeButton(f, "Send", SEND_W, function()
+		local c = ActiveChat()
+		if c and c.pendingId then AzerMind.CancelPending() else AzerMind.SendFromInput() end
+	end, true)
+	send:SetPoint("TOPLEFT", inputBg, "TOPRIGHT", 6, 0)
+	send:SetPoint("BOTTOMLEFT", clearDraft, "TOPLEFT", 0, 8)
 	ui.send = send
 
 	-- Connect stands in for Send until the bridge has been seen (see UpdateConnect).
-	local connect = MakeButton(f, "Connect", SEND_W, WoWAI.Connect)
-	connect:SetHeight(30)
-	connect:SetPoint("LEFT", inputBg, "RIGHT", 6, 0)
+	local connect = MakeButton(f, "Connect", SEND_W, AzerMind.Connect, true)
+	connect:SetPoint("TOPLEFT", inputBg, "TOPRIGHT", 6, 0)
+	connect:SetPoint("BOTTOMLEFT", clearDraft, "TOPLEFT", 0, 8)
 	connect:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText("Connect to the bridge")
-		GameTooltip:AddLine("The bridge must be running on this PC (npm start in wow-ai, or wow-ai in your project). The light turns green once it answers.", 0.8, 0.8, 0.8, true)
+		GameTooltip:SetText("Connect to the bridge", 0.91, 0.87, 0.78)
+		GameTooltip:AddLine("The bridge must be running on this PC (npm start in azermind, or azermind in your project). The light turns green once it answers.", 0.8, 0.8, 0.8, true)
 		GameTooltip:Show()
 	end)
 	connect:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2641,30 +3324,36 @@ local function BuildUI()
 	refresh:Hide()
 	ui.refresh = refresh
 
-	-- Bottom row: Clear, plus Resend while a message is in flight. Rename, Folder
-	-- and Delete live on each chat row in the left panel.
-	local clear = MakeButton(f, "Clear", 60, function()
-		local c = ActiveChat()
-		if c then wipe(c.history) end
-		WoWAI.Render()
+	-- Resend is attached to the pending user message; no footer action row.
+
+	local codexButton = MakeButton(f, "Config", 62, function() AzerMind.CodexPrompt() end)
+	codexButton:SetPoint("RIGHT", mini, "LEFT", -4, 0)
+	codexButton:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+		GameTooltip:SetText("AI settings", 0.91, 0.87, 0.78)
+		GameTooltip:AddLine("Choose the model and reasoning for this conversation.", 0.8, 0.8, 0.8, true)
+		GameTooltip:Show()
 	end)
-	clear:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 16)
+	codexButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	codexButton:Hide()
+	ui.codexButton = codexButton
+	refresh:ClearAllPoints()
+	refresh:SetPoint("RIGHT", codexButton, "LEFT", -6, 0)
 
-	local resend = MakeButton(f, "Resend", 70, WoWAI.Resend)
-	resend:SetPoint("LEFT", clear, "RIGHT", 6, 0)
-	resend:Hide()
-	ui.resend = resend
-
-	-- A named, always-present button so a keybinding can click it (see /wow-ai bind).
-	local hotkey = CreateFrame("Button", "WoWAIRefreshButton", UIParent)
+    for _,spec in ipairs({{"AzerMindOpenChatKeyButton",function() AzerMind.Toggle(true) end},{"AzerMindNewChatKeyButton",function() AzerMind.NewChat() end}}) do
+        local button=CreateFrame("Button",spec[1],UIParent)
+        button:SetSize(1,1); button:SetPoint("TOPLEFT",UIParent,"TOPLEFT",-10,10); button:SetScript("OnClick",spec[2])
+    end
+	-- A named, always-present button so a keybinding can click it (see /azermind bind).
+	local hotkey = CreateFrame("Button", "AzerMindRefreshButton", UIParent)
 	hotkey:SetSize(1, 1)
 	hotkey:SetPoint("TOPLEFT", UIParent, "TOPLEFT", -10, 10)
 	hotkey:SetScript("OnClick", function()
 		local c = ActiveChat()
 		if c and c.pendingId then
-			WoWAI.Send("")
+			AzerMind.Send("")
 		else
-			WoWAI.Toggle()
+			AzerMind.Toggle()
 		end
 	end)
 
@@ -2674,22 +3363,23 @@ local function BuildUI()
 	cwd:SetJustifyH("LEFT")
 	cwd:SetWordWrap(false)
 	ui.cwd = cwd
+	cwd:Hide() -- Technical context stays available through diagnostics, not a footer.
 
 	-- Resize grip
 	local grip = CreateFrame("Button", nil, f)
-	grip:SetSize(16, 16)
+	grip:SetSize(24, 24)
 	grip:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -5, 5)
 	grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
 	grip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
 	grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-	grip:SetScript("OnMouseDown", function() f:StartSizing("BOTTOMRIGHT") end)
+	grip:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then f:StartSizing("BOTTOMRIGHT") end end)
 	grip:SetScript("OnMouseUp", function()
 		f:StopMovingOrSizing()
 		s.width, s.height = f:GetSize()
 	end)
 
 	-- Mini bar: what the window collapses into. Click it to expand, drag to move.
-	local m = CreateFrame("Frame", "WoWAIMini", UIParent, "BackdropTemplate")
+	local m = CreateFrame("Frame", "AzerMindMini", UIParent, "BackdropTemplate")
 	ui.mini = m
 	m:SetSize(250, 30)
 	if s.miniPoint then
@@ -2714,11 +3404,12 @@ local function BuildUI()
 	end)
 	m:SetScript("OnMouseUp", function(self, button)
 		if button == "LeftButton" and not self.dragging then
-			WoWAI.Minimize(false)
+			AzerMind.Minimize(false)
 		end
 	end)
 	m:SetBackdrop(BACKDROP)
-	m:SetBackdropColor(0.05, 0.05, 0.07, 0.95)
+	m:SetBackdropColor(0.055, 0.049, 0.039, 0.97)
+	if AzerMindTheme then AzerMindTheme.Glow(m, 0.16) end
 	m:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
 	m:Hide()
 
@@ -2728,7 +3419,7 @@ local function BuildUI()
 
 	local mlabel = m:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	mlabel:SetPoint("LEFT", miniDotHolder, "RIGHT", 6, 0)
-	mlabel:SetText("WoW AI")
+	mlabel:SetText("AzerMind")
 
 	local badge = m:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	badge:SetPoint("LEFT", mlabel, "RIGHT", 8, 0)
@@ -2757,16 +3448,16 @@ local function BuildUI()
 	local mclose = CreateFrame("Button", nil, m, "UIPanelCloseButton")
 	mclose:SetSize(24, 24)
 	mclose:SetPoint("RIGHT", m, "RIGHT", -2, 0)
-	mclose:SetScript("OnClick", function() WoWAI.Toggle(false) end)
+	mclose:SetScript("OnClick", function() AzerMind.Toggle(false) end)
 	mclose:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-		GameTooltip:SetText("Quit: hide completely (/wow-ai brings it back)")
+		GameTooltip:SetText("Quit: hide completely (/azermind brings it back)")
 		GameTooltip:Show()
 	end)
 	mclose:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
-function WoWAI.Toggle(show)
+function AzerMind.Toggle(show)
 	if not ui.frame then return end
 	if show == nil then show = not ui.frame:IsShown() end
 	if show then
@@ -2780,15 +3471,21 @@ function WoWAI.Toggle(show)
 	ui.quitting = nil
 	db.settings.shown = show
 	if show then
-		WoWAI.Render()
-		-- No auto-focus: the game keeps the keyboard until you click the box.
+		AzerMind.Render()
+		ui.input:SetFocus()
+		ui.input:SetCursorPosition(#ui.input:GetText())
 		-- No automatic hello either: if the bridge hasn't been seen, the panel
 		-- shows Connect in place of Send and waits for a click.
 	end
-	WoWAI.UpdateMini()
+	AzerMind.UpdateMini()
 end
 
-function WoWAI.Minimize(mini)
+-- Labels for the game's native Key Bindings configuration.
+BINDING_HEADER_AZERMIND = "AzerMind"
+BINDING_NAME_AZERMIND_OPEN_CHAT = "Open chat"
+BINDING_NAME_AZERMIND_NEW_CHAT = "New chat"
+
+function AzerMind.Minimize(mini)
 	if not ui.frame then return end
 	if mini == nil then mini = not db.settings.minimized end
 	if mini then
@@ -2796,9 +3493,9 @@ function WoWAI.Minimize(mini)
 		db.settings.shown = true
 		ui.frame:Hide() -- OnHide shows the mini bar
 		if ui.mini and not ui.mini:IsShown() then ui.mini:Show() end
-		WoWAI.UpdateMini()
+		AzerMind.UpdateMini()
 	else
-		WoWAI.Toggle(true)
+		AzerMind.Toggle(true)
 	end
 end
 
@@ -2807,35 +3504,35 @@ end
 ---------------------------------------------------------------------------
 
 local HELP = table.concat({
-	"/wow-ai                        toggle the window (/ai, /wowai and the old /wow-claude are the same command)",
-	"/wow-ai mini                   collapse to the small bar (click the bar to expand)",
-	"/wow-ai hide                   hide the window completely",
-	"/ai <text>                         send <text> to the current chat straight from the game chat box (/wow-ai <text> too). A message that starts with a command word is still sent when the rest of the line doesn't fit that command",
+	"/azermind                        toggle the window (/ai, /azermind and the old /wow-claude are the same command)",
+	"/azermind mini                   collapse to the small bar (click the bar to expand)",
+	"/azermind hide                   hide the window completely",
+	"/ai <text>                         send <text> to the current chat straight from the game chat box (/azermind <text> too). A message that starts with a command word is still sent when the rest of the line doesn't fit that command",
 	"/r <text>                          replies to the agent when it was the last to message you (else normal whisper reply)",
-	"/wow-ai echo summary|full|short|off|<chars>   how much of each reply to print in the game chat (summary = the agent's closing TL;DR lines)",
-	"/wow-ai longchat on|off        let the game chat box take 4000 characters (for long /ai messages)",
-	"/wow-ai new [name]             start a new chat (its own agent session, like a new terminal)",
-	"/wow-ai chat <n|name>          switch chats (or click one in the left panel)",
-	"/wow-ai rename [name]          rename the current chat (no name = dialog; right-clicking the chat in the left panel offers it too)",
-	"/wow-ai delete                 delete the current chat",
-	"/wow-ai cd <folder>            folder this chat's agent works in (relative to the bridge's folder; no folder = back to default). Right-clicking the chat in the left panel and picking Folder does the same",
-	"/wow-ai agent [name]           which agent this chat talks to (no name = show; default = the bridge's). Right-clicking the chat and picking Agent does the same",
-	"/wow-ai reset                  next message in this chat starts a fresh agent session",
-	"/wow-ai context [on|off]       what the agent is told about your character and where you are (no argument = show it)",
-	"/wow-ai map [...]              map layers the agent drew, the route navigator and herb/ore nodes (no argument = status and subcommands; /aimap is the same)",
-	"/wow-ai mode pixel             no-reload transport (default)",
-	"/wow-ai mode reload            fallback transport: a /reload per step",
-	"/wow-ai resend                 show the strip again if the bridge missed it",
-	"/wow-ai reload                 reload now (also frees the slot pool)",
-	"/wow-ai cancel                 stop waiting on this chat's reply",
-	"/wow-ai copy                   open the last reply in a selectable box for Ctrl+C",
-	"/wow-ai macro undo             undo the last macro the agent's button created or changed",
-	"/wow-ai bind <key>             hotkey: checks for a reply while waiting, else toggles the window",
-	"/wow-ai auto on|off            reload-mode only: auto-reload on your next keypress after the interval",
-	"/wow-ai signal on|off          the cheap sound-file readiness check (off if it spams errors)",
-	"/wow-ai slots                  how many reply slots are still free this session",
-	"/wow-ai diag                   transport diagnostics (is the cheap sound-file channel working?)",
-	"/wow-ai clear                  clear this chat's transcript",
+	"/azermind echo summary|full|short|off|<chars>   how much of each reply to print in the game chat (summary = the agent's closing TL;DR lines)",
+	"/azermind longchat on|off        let the game chat box take 4000 characters (for long /ai messages)",
+	"/azermind new [name]             start a new chat (its own agent session, like a new terminal)",
+	"/azermind chat <n|name>          switch chats (or click one in the left panel)",
+	"/azermind rename [name]          rename the current chat (no name = dialog; right-clicking the chat in the left panel offers it too)",
+	"/azermind delete                 delete the current chat",
+	"/azermind cd <folder>            folder this chat's agent works in (relative to the bridge's folder; no folder = back to default). Right-clicking the chat in the left panel and picking Folder does the same",
+	"/azermind agent [name]           which agent this chat talks to (no name = show; default = the bridge's). Right-clicking the chat and picking Agent does the same",
+	"/azermind reset                  next message in this chat starts a fresh agent session",
+	"/azermind context [on|off]       what the agent is told about your character and where you are (no argument = show it)",
+	"/azermind map [...]              map layers the agent drew, the route navigator and herb/ore nodes (no argument = status and subcommands; /aimap is the same)",
+	"/azermind mode pixel             no-reload transport (default)",
+	"/azermind mode reload            fallback transport: a /reload per step",
+	"/azermind resend                 show the strip again if the bridge missed it",
+	"/azermind reload                 reload now (also frees the slot pool)",
+	"/azermind cancel                 stop waiting on this chat's reply",
+	"/azermind copy                   open the last reply in a selectable box for Ctrl+C",
+	"/azermind macro undo             undo the last macro the agent's button created or changed",
+	"/azermind bind <key>             hotkey: checks for a reply while waiting, else toggles the window",
+	"/azermind auto on|off            reload-mode only: auto-reload on your next keypress after the interval",
+	"/azermind signal on|off          the cheap sound-file readiness check (off if it spams errors)",
+	"/azermind slots                  how many reply slots are still free this session",
+	"/azermind diag                   transport diagnostics (is the cheap sound-file channel working?)",
+	"/azermind clear                  clear this chat's transcript",
 }, "\n")
 
 -- What each subcommand accepts, so that free text which happens to start with
@@ -2857,6 +3554,7 @@ end
 local COMMAND_ARGS = {
 	mini = 0, min = 0, hide = 0, quit = 0, help = 0, clear = 0, delete = 0, reset = 0, copy = 0,
 	cancel = 0, resend = 0, reload = 0, refresh = 0, slots = 0, diag = 0,
+	resetui = 0,
 	context = { [""] = true, on = true, off = true }, ctx = { [""] = true, on = true, off = true },
 	mode = { [""] = true, pixel = true, reload = true },
 	signal = { [""] = true, on = true, off = true }, longchat = { [""] = true, on = true, off = true },
@@ -2865,8 +3563,8 @@ local COMMAND_ARGS = {
 	bind = 1, agent = 1,
 	chat = ChatArgument, chats = ChatArgument,
 	cd = true, new = true, rename = true,
-	map = true, -- /wow-ai map ...: Map.lua (layers, navigator, herb/ore nodes)
-	macro = { undo = true }, -- /wow-ai macro undo; "/ai macro for my warrior" still goes to the agent
+	map = true, -- /azermind map ...: Map.lua (layers, navigator, herb/ore nodes)
+	macro = { undo = true }, -- /azermind macro undo; "/ai macro for my warrior" still goes to the agent
 }
 
 local function IsCommand(cmd, rest)
@@ -2885,12 +3583,12 @@ local function ApplyLongChat()
 	box:SetMaxLetters(db.settings.longchat and 4000 or 255)
 end
 
-SLASH_WOWAI1 = "/wow-ai"
-SLASH_WOWAI2 = "/wowai"
-SLASH_WOWAI3 = "/wow-claude" -- the project's old name, kept so old habits and macros still work
-SLASH_WOWAI4 = "/ai" -- the short form: /ai <text> sends, /ai agent codex and the rest work too
-SLASH_WOWAI5 = "/ask"
-SlashCmdList["WOWAI"] = function(msg)
+SLASH_AZERMIND1 = "/azermind"
+SLASH_AZERMIND2 = "/wow-ai" -- compatibility alias for existing macros
+SLASH_AZERMIND3 = "/wow-claude" -- the project's old name, kept so old habits and macros still work
+SLASH_AZERMIND4 = "/ai" -- the short form: /ai <text> sends, /ai agent codex and the rest work too
+SLASH_AZERMIND5 = "/ask"
+SlashCmdList["AZERMIND"] = function(msg)
 	msg = Trim(msg or "")
 	local cmd, rest = msg:match("^(%S+)%s*(.-)$")
 	cmd = cmd and cmd:lower() or ""
@@ -2900,15 +3598,15 @@ SlashCmdList["WOWAI"] = function(msg)
 	-- Anything that isn't a command, or a command word followed by something it
 	-- doesn't take, is a message for the agent.
 	if cmd ~= "" and not IsCommand(cmd, rest) then
-		WoWAI.Send(msg)
+		AzerMind.Send(msg)
 		return
 	end
 	if cmd == "" then
-		WoWAI.Toggle()
+		AzerMind.Toggle()
 	elseif cmd == "mini" or cmd == "min" then
-		WoWAI.Minimize(true)
+		AzerMind.Minimize(true)
 	elseif cmd == "new" then
-		WoWAI.NewChat(rest)
+		AzerMind.NewChat(rest)
 	elseif cmd == "chat" or cmd == "chats" then
 		local n = tonumber(rest)
 		local target = n and db.chats[n]
@@ -2918,40 +3616,42 @@ SlashCmdList["WOWAI"] = function(msg)
 			end
 		end
 		if target then
-			WoWAI.SwitchChat(target.id)
+			AzerMind.SwitchChat(target.id)
 		else
 			local lines = {}
 			for i, ch in ipairs(db.chats) do
 				table.insert(lines, i .. ". " .. ch.name .. (ch.id == db.activeChat and "  (current)" or "") .. (ch.pendingId and "  working" or "") .. ((ch.unread or 0) > 0 and ("  " .. ch.unread .. " new") or ""))
 			end
 			AddHistory(c, "system", "Chats:\n" .. table.concat(lines, "\n"))
-			WoWAI.Render()
+			AzerMind.Render()
 		end
-		WoWAI.Toggle(true)
+		AzerMind.Toggle(true)
 	elseif cmd == "rename" then
 		if rest ~= "" then
 			c.name = rest:sub(1, 24)
-			WoWAI.Render()
+			AzerMind.Render()
 		else
-			WoWAI.RenameActive()
+			AzerMind.RenameActive()
 		end
-		WoWAI.Toggle(true)
+		AzerMind.Toggle(true)
 	elseif cmd == "delete" then
-		WoWAI.DeleteChat()
+		AzerMind.DeleteChat()
 	elseif cmd == "cd" then
-		WoWAI.SetFolder(rest, c)
-		WoWAI.Toggle(true)
+		AzerMind.SetFolder(rest, c)
+		AzerMind.Toggle(true)
 	elseif cmd == "map" then
-		if WoWAIMap then WoWAIMap.Command(rest) else print("|cff66ccff[WoW AI]|r the map module did not load") end
+		if AzerMindMap then AzerMindMap.Command(rest) else print("|cff66ccff[AzerMind]|r the map module did not load") end
 	elseif cmd == "agent" then
-		WoWAI.SetAgent(rest, c)
-		WoWAI.Toggle(true)
+		AzerMind.SetAgent(rest, c)
+		AzerMind.Toggle(true)
+	elseif cmd == "resetui" then
+		AzerMind.ResetUI()
 	elseif cmd == "reset" then
 		c.resetNext = true
 		local where = ChatFolder(c)
 		AddHistory(c, "system", "Next message starts a fresh " .. ChatAgentName(c) .. " session" .. (where ~= "" and (" in " .. where) or ""))
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "context" or cmd == "ctx" then
 		rest = rest:lower()
 		if rest == "on" or rest == "off" then
@@ -2959,15 +3659,15 @@ SlashCmdList["WOWAI"] = function(msg)
 			-- Make sure the next record carries the change, hello throttle or not.
 			run.contextSent = nil
 			run.lastHelloAt = nil
-			if WoWAI.IsConnected() then WoWAI.SayHello() end
+			if AzerMind.IsConnected() then AzerMind.SayHello() end
 		end
-		local ctx = WoWAI.GameContext()
+		local ctx = AzerMind.GameContext()
 		AddHistory(c, "system", (s.context
-			and "Game context is ON: the agent is told this with each message (it goes into its system prompt, so unrelated projects are unaffected by anything but a few lines). /wow-ai context off to stop.\n\n"
-			or "Game context is OFF: the agent is told nothing about the game. /wow-ai context on to send this:\n\n") .. ctx
+			and "Game context is ON: the agent is told this with each message (it goes into its system prompt, so unrelated projects are unaffected by anything but a few lines). /azermind context off to stop.\n\n"
+			or "Game context is OFF: the agent is told nothing about the game. /azermind context on to send this:\n\n") .. ctx
 			.. "\n\nTip: click the input box, then shift-click an item, spell or quest to link it into your message; the agent gets its tooltip.")
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "mode" then
 		if rest == "pixel" or rest == "reload" then
 			s.mode = rest
@@ -2975,10 +3675,10 @@ SlashCmdList["WOWAI"] = function(msg)
 		else
 			AddHistory(c, "system", "mode is " .. s.mode .. " (pixel or reload)")
 		end
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "resend" then
-		WoWAI.Resend()
+		AzerMind.Resend()
 	elseif cmd == "auto" then
 		local n = tonumber(rest)
 		if n then
@@ -2989,16 +3689,16 @@ SlashCmdList["WOWAI"] = function(msg)
 		elseif rest == "off" then
 			s.autoRefresh = false
 		end
-		WoWAI.UpdateStatus()
-		WoWAI.ArmAutoRefresh()
+		AzerMind.UpdateStatus()
+		AzerMind.ArmAutoRefresh()
 	elseif cmd == "hide" or cmd == "quit" then
-		WoWAI.Toggle(false)
+		AzerMind.Toggle(false)
 	elseif cmd == "macro" and rest == "undo" then
-		WoWAI.UndoMacro()
+		AzerMind.UndoMacro()
 	elseif cmd == "copy" then
 		for i = #c.history, 1, -1 do
 			if c.history[i].role == "assistant" then
-				WoWAI.ShowCopy(c.history[i].text)
+				AzerMind.ShowCopy(c.history[i].text)
 				break
 			end
 		end
@@ -3009,35 +3709,35 @@ SlashCmdList["WOWAI"] = function(msg)
 			s.echo = tostring(math.max(200, math.floor(tonumber(rest))))
 		end
 		AddHistory(c, "system", "replies in game chat: " .. s.echo .. " (summary = the agent's TL;DR lines, full = " .. ECHO_DEFAULT .. " chars, short, off, or a number of characters)")
-		WoWAI.Render()
+		AzerMind.Render()
 	elseif cmd == "longchat" then
 		if rest == "on" then s.longchat = true elseif rest == "off" then s.longchat = false end
 		ApplyLongChat()
 		AddHistory(c, "system", "game chat box limit: " .. (s.longchat and "4000 characters (fine for /ai; real chat over 255 may be rejected by the server)" or "255 (default)"))
-		WoWAI.Render()
+		AzerMind.Render()
 	elseif cmd == "signal" then
 		if rest == "on" then s.signal = true elseif rest == "off" then s.signal = false end
 		AddHistory(c, "system", "signal check is " .. (s.signal and "on" or "off"))
-		WoWAI.Render()
+		AzerMind.Render()
 	elseif cmd == "slots" then
 		local free = 0
 		for i = 1, SLOT_COUNT do
 			if not C_AddOns.IsAddOnLoaded(SlotName(i)) then free = free + 1 end
 		end
 		AddHistory(c, "system", free .. " of " .. SLOT_COUNT .. " reply slots free this session (a reload frees all)")
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "refresh" or cmd == "reload" then
 		SafeReload()
 	elseif cmd == "bind" then
 		local key = rest:upper()
 		if key ~= "" and not InCombatLockdown() then
-			SetBinding(key, "CLICK WoWAIRefreshButton:LeftButton")
+			SetBinding(key, "CLICK AzerMindRefreshButton:LeftButton")
 			SaveBindings(GetCurrentBindingSet())
 			AddHistory(c, "system", key .. " is now bound: checks for a reply while waiting, otherwise toggles this window")
 		end
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "diag" then
 		local free = 0
 		for i = 1, SLOT_COUNT do
@@ -3049,7 +3749,7 @@ SlashCmdList["WOWAI"] = function(msg)
 			"sound checks: " .. signalStats.checks .. ", valid hits: " .. signalStats.hits .. (signalStats.lastHit and (", last hit " .. FmtDur(GetTime() - signalStats.lastHit) .. " ago") or ""),
 			"slot polls this session: " .. (run.polls or 0) .. ", free slots: " .. free .. "/" .. SLOT_COUNT,
 			"presence: head at " .. tostring(run.presence and run.presence.last or "?") .. ", beats seen: " .. tostring(run.presence and run.presence.beats or 0),
-			select(5, WoWAI.BridgeState()),
+			select(5, AzerMind.BridgeState()),
 			"mode: " .. s.mode .. ", session token: " .. tostring(db.session),
 		}
 		for _, ch in ipairs(db.chats) do
@@ -3059,26 +3759,18 @@ SlashCmdList["WOWAI"] = function(msg)
 			end
 		end
 		AddHistory(c, "system", "Diagnostics:\n" .. table.concat(lines, "\n"))
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	elseif cmd == "cancel" then
-		if c.pendingId then
-			AddHistory(c, "system", "Gave up waiting on #" .. c.pendingId)
-			run.outbound[c.pendingId] = nil
-			if run.act then run.act[c.id] = nil end
-			c.pendingId = nil
-			c.progress = nil
-			RefreshStrip()
-			if not AnyPending() then keyCatcher:Hide() end
-		end
-		WoWAI.Render()
+		AzerMind.CancelPending()
 	elseif cmd == "clear" then
 		wipe(c.history)
-		WoWAI.Render()
+		if ui.deletedMessage and ui.deletedMessage.chat==c.id then ui.deletedMessage=nil end
+		AzerMind.Render()
 	elseif cmd == "help" then
 		AddHistory(c, "system", HELP)
-		WoWAI.Render()
-		WoWAI.Toggle(true)
+		AzerMind.Render()
+		AzerMind.Toggle(true)
 	end
 end
 
@@ -3125,29 +3817,34 @@ ev:SetScript("OnEvent", function(self, event, arg1)
 			ui.input:SetText(c.draft)
 			if not c.pendingId then c.draft = nil end
 		end
-		WoWAI.Render()
+		AzerMind.Render()
 		if db.settings.shown then
 			if db.settings.minimized then
-				WoWAI.Minimize(true)
+				AzerMind.Minimize(true)
 			else
-				WoWAI.Toggle(true)
+				AzerMind.Toggle(true)
 			end
 		end
-		WoWAI.ArmAutoRefresh()
-		WoWAI.UpdateDot()
+		AzerMind.ArmAutoRefresh()
+		AzerMind.UpdateDot()
 		if db.settings.longchat then ApplyLongChat() end
 		HookReplyCommand()
 		C_Timer.NewTicker(TICK_SECONDS, Tick)
-		C_Timer.After(3, WoWAI.SayHello)
+		C_Timer.NewTicker(0.75, function()
+			for id, rec in pairs(run.outbound) do
+				if not rec.acked and #RecordFor(id, rec) > STRIP_PAYLOAD then RefreshStrip(); break end
+			end
+		end)
+		C_Timer.After(3, AzerMind.SayHello)
 	elseif event == "UPDATE_MACROS" then
 		-- "Create" / "Update" on the macro buttons follows what exists now.
-		if ui.frame and ui.frame:IsShown() then WoWAI.Render() end
+		if ui.frame and ui.frame:IsShown() then AzerMind.Render() end
 	elseif event == "PLAYER_REGEN_ENABLED" then
-		if WoWAI.reloadAfterCombat then
-			WoWAI.reloadAfterCombat = nil
+		if AzerMind.reloadAfterCombat then
+			AzerMind.reloadAfterCombat = nil
 			ReloadUI()
 		elseif db then
-			WoWAI.ArmAutoRefresh()
+			AzerMind.ArmAutoRefresh()
 		end
 	end
 end)

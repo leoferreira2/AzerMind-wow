@@ -1,0 +1,28 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const W = require('../bridge/wowhead');
+const P = require('../bridge/protocol');
+const context = 'Game: World of Warcraft: Forever (client 1.60.1)';
+test('Forever policy applies to new and resumed context, not unrelated clients', () => {
+  assert.ok(P.systemPrompt(context, '').includes('site:wowhead.com/forever/'));
+  assert.ok(P.systemPrompt(context, '').includes('Never silently substitute'));
+  assert.ok(!P.systemPrompt('', '').includes('site:wowhead.com/forever/'));
+  assert.equal(W.references('Game: World of Warcraft Classic', 'item 5313'), '');
+});
+test('reference candidates use linked IDs, preserve version and deduplicate', () => {
+  const result = W.references(context, 'Compare item 999\n--- Linked from the game ---\n[Ring] item 5313 (Uncommon)\n[Ring] item 5313\n[Quest] quest 849\n[Spell] spell 172');
+  assert.ok(result.includes('https://www.wowhead.com/forever/item=5313'));
+  assert.ok(result.includes('https://www.wowhead.com/forever/quest=849'));
+  assert.ok(result.includes('https://www.wowhead.com/forever/spell=172'));
+  assert.equal(result.match(/item=5313/g).length, 1);
+  assert.ok(!result.includes('999'));
+  assert.ok(result.includes('not yet verified'));
+  assert.equal(W.references(context, 'No linked items.'), '');
+});
+test('lookup candidates are bounded and reject nonpositive IDs', () => {
+  const prompt = '--- Linked from the game ---\n[x] item 0\n' + Array.from({length:30}, (_,i) => `[x] item ${i+1}`).join('\n');
+  const result = W.references(context, prompt);
+  assert.equal(result.match(/https:\/\//g).length,20);
+  assert.ok(!result.includes('item=0'));
+});

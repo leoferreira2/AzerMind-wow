@@ -5,6 +5,7 @@
 
 const os = require('os');
 const path = require('path');
+const Wowhead = require('./wowhead');
 
 function fromHex(hex) {
   return Buffer.from(hex || '', 'hex').toString('utf8');
@@ -121,8 +122,12 @@ function parseFlags(flags) {
     else if (tok === 'h') out.hello = true;
     else if (tok === 'd') out.forget = true;
     else if (tok === 'c') out.context = true;
+    else if (tok === 'settings') out.settings = true;
+    else if (/^cancel=\d+$/.test(tok)) out.cancel = Number(tok.slice(7));
     else if (tok.startsWith('allow=')) out.allow.push(...tok.slice(6).split(',').map(s => s.trim()).filter(Boolean));
     else if (tok.startsWith('agent=')) out.agent = tok.slice(6).trim().toLowerCase();
+    else if (tok.startsWith('model=')) out.model = tok.slice(6);
+    else if (tok.startsWith('reasoning=')) out.reasoning = tok.slice(10);
   }
   return out;
 }
@@ -132,6 +137,37 @@ function parseFlags(flags) {
 // `cwd` is left as typed; the bridge resolves it against its default folder.
 // The ctx field is only there when the flags say "c" (older addons never set
 // it), so a separator inside the text can't be mistaken for it.
+// Bounded, expiring transport assembly; no partial prompt reaches the agent.
+function createStripAssembler() {
+  const pending = new Map();
+  return (payload, now = Date.now()) => {
+    for (const [key, entry] of pending) if (now - entry.at > 120000) pending.delete(key);
+    if (!String(payload).startsWith('F1\x1F')) return payload;
+    const p = String(payload).split('\x1F');
+    if (p.length !== 6 || !/^[a-zA-Z0-9]{1,128}$/.test(p[1]) || !/^\d+$/.test(p[2])) return null;
+    const part = Number(p[3]), count = Number(p[4]);
+    if (!Number.isInteger(part) || !Number.isInteger(count) || count < 2 || count > 80 || part < 1 || part > count || !/^(?:[a-fA-F0-9]{2}){1,2500}$/.test(p[5])) return null;
+    const key = `${p[1]}:${p[2]}`;
+    let entry = pending.get(key);
+    if (!entry) {
+      if (pending.size >= 32) pending.delete(pending.keys().next().value);
+      entry = { count, parts: new Map(), at: now };
+      pending.set(key, entry);
+    }
+    if (entry.count !== count) return null;
+    if (entry.parts.has(part) && entry.parts.get(part) !== p[5]) return null;
+    entry.parts.set(part, p[5]);
+    if (entry.parts.size !== count) return null;
+    const bytes = Buffer.concat(Array.from({ length: count }, (_, i) => Buffer.from(entry.parts.get(i + 1), 'hex')));
+    pending.delete(key);
+    if (bytes.length > 65000) return null;
+    const result = bytes.toString('utf8');
+    const fields = result.split('\x1F');
+    if (fields[0] !== p[1] || fields[2] !== p[2]) return null;
+    return result;
+  };
+}
+
 function jobsFromStrip(headerId, payload) {
   const jobs = [];
   for (const rec of String(payload).split('\x1E')) {
@@ -165,6 +201,10 @@ function parseOutbox(src) {
   const chat = (b.match(/\["chat"\]\s*=\s*"([0-9a-zA-Z]*)"/) || [])[1] || '';
   const newSession = /\["newSession"\]\s*=\s*true/.test(b);
   const job = { id, session, chat, text, cwd, newSession, via: 'reload' };
+  for (const key of ['model', 'reasoning']) {
+    const value = b.match(new RegExp('\\["' + key + '"\\]\\s*=\\s*"([a-zA-Z0-9_.-]*)"'));
+    if (value && value[1]) job[key] = value[1];
+  }
   const ctx = b.match(/\["ctx"\]\s*=\s*"([0-9a-fA-F]*)"/);
   if (ctx) job.ctx = fromHex(ctx[1]);
   const agent = b.match(/\["agent"\]\s*=\s*"([0-9a-zA-Z_-]*)"/);
@@ -182,15 +222,15 @@ function parseOutbox(src) {
 // reply goes to the addon's window and only its closing "TL;DR:" block is
 // printed in the game chat, so every reply must end with one. Then, while the
 // addon has sent a context (the player's character, location and so on; see
-// GameContext in WoWAI.lua), that context plus the addon/macro primer
+// GameContext in AzerMind.lua), that context plus the addon/macro primer
 // (docs/WOW-ADDON-PRIMER.md) so it can write for this client whatever folder
 // the chat works in. Empty context = neither is appended, so a bridge used for
-// unrelated projects, or an addon with `/wow-ai context off`, only gets the
+// unrelated projects, or an addon with `/azermind context off`, only gets the
 // reply-format rule. Claude and Grok take this as a system prompt; for Codex,
 // agents.js puts it at the top of the prompt.
 const SUMMARY_MARKER = 'TL;DR:';
 const REPLY_FORMAT = [
-  'The user is talking to you from inside World of Warcraft through the wow-ai addon. They type in a small in-game window and your reply is shown there as plain text (markdown is not rendered), so keep replies compact and formatting simple.',
+  'The user is talking to you from inside World of Warcraft through the azermind addon. They type in a small in-game window and your reply is shown there as plain text (markdown is not rendered), so keep replies compact and formatting simple.',
   '',
   `Only a short summary of each reply is printed into the game chat, where the user actually sees it while playing; the full reply is only visible if they open the addon window. So end EVERY reply with a final block that starts with "${SUMMARY_MARKER}" on its own line and holds one or two short lines (under about 200 characters in total) saying what you did or what the answer is, and what you need from the user if anything. Write it as plain text. Do not repeat the summary elsewhere, and put nothing after it.`,
 ];
@@ -198,7 +238,7 @@ const REPLY_FORMAT = [
 // How the agent draws on the world map (see "Map layers" below and docs/MAP.md).
 // Sent with the game context, since marks only make sense in a game chat.
 const MAP_HINT = [
-  'You can mark the player\'s world map. Either append commands to the file named by the WOW_AI_MAP_FILE environment variable (one JSON object per line) or, for a few marks, end the reply with a fenced block whose language tag is wowmap containing them. Commands:',
+  'You can mark the player\'s world map. Either append commands to the file named by the AZERMIND_MAP_FILE environment variable (one JSON object per line) or, for a few marks, end the reply with a fenced block whose language tag is wowmap containing them. Commands:',
   '{"op":"set","layer":"<name>","title":"<shown title>","ordered":true,"loop":false,"points":[{"m":<uiMapID>,"x":<0-100>,"y":<0-100>,"label":"<text>","kind":"quest"}]}  replaces that layer; "ordered" draws a numbered route with a navigator, "loop" closes it.',
   '{"op":"clear","layer":"<name>"} removes a layer; {"op":"clearall"} removes them all.',
   'x and y are map percent on the map with that uiMapID (the context gives the player\'s current one). kind is one of ore, herb, quest, turnin, kill, loot, object, explore, npc, trainer, vendor, dungeon, flight, poi. Only mark the map when asked for a route, marks or locations; say in the reply what you drew.',
@@ -217,6 +257,7 @@ const MACRO_HINT = [
 function systemPrompt(ctx, primer) {
   const lines = [...REPLY_FORMAT];
   const text = String(ctx || '').trim();
+  if (Wowhead.isForever(text)) lines.push('', Wowhead.POLICY);
   if (text) {
     lines.push('',
       'Their in-game situation when the message was written, as reported by the addon:',
@@ -307,13 +348,16 @@ function luaTable(globalName, records, opts = {}) {
   const now = opts.now || Date.now();
   const agents = Array.isArray(opts.agents) ? opts.agents : [];
   const lines = [
-    '-- Written by the wow-ai bridge (bridge/bridge.js). Do not edit by hand.',
+    '-- Written by the azermind bridge (bridge/bridge.js). Do not edit by hand.',
     `${globalName} = {`,
     `\tts = ${luaStr(new Date(now).toISOString())},`,
     `\tnow = ${Math.floor(now / 1000)},`,
     `\tcwd = ${luaStr(opts.cwd || '')},`,
     `\tagent = ${luaStr(opts.agent || '')},`,
     `\tagents = { ${agents.map(luaStr).join(', ')} },`,
+    `\tcodexModels = { ${(opts.codexModels || []).map(m => `{ model = ${luaStr(m.model)}, efforts = { ${m.efforts.map(luaStr).join(', ')} } }`).join(', ')} },`,
+    `\tagentSettings = { ${Object.entries(opts.agentSettings || {}).map(([id, v]) => `[${luaStr(id)}] = { model = ${luaStr(v.model)}, reasoning = ${luaStr(v.reasoning)}, efforts = { ${(v.efforts || []).map(luaStr).join(', ')} }, catalogStatus = ${luaStr(v.catalogStatus || '')}, catalogSource = ${luaStr(v.catalogSource || '')}, effortFlag = ${v.effortFlag ? 'true' : 'false'}, models = { ${(v.models || []).map(m => `{ model = ${luaStr(m.model)}, name = ${luaStr(m.name || m.model)}, effortsKnown = ${m.effortsKnown === false ? 'false' : 'true'}, efforts = { ${(m.efforts || []).map(luaStr).join(', ')} } }`).join(', ')} } }`).join(', ')} },`,
+    `\taiDefaults = { agent = ${luaStr(opts.aiDefaults?.agent || '')}, model = ${luaStr(opts.aiDefaults?.model || '')}, reasoning = ${luaStr(opts.aiDefaults?.reasoning || '')} },`,
     '\treplies = {',
   ];
   for (const r of records) {
@@ -355,7 +399,7 @@ function luaTable(globalName, records, opts = {}) {
 // ---------------------------------------------------------------------------
 //
 // The agent marks the in-game map by writing commands, one JSON object per line,
-// to the file named by WOW_AI_MAP_FILE in its environment (a tool of its own can
+// to the file named by AZERMIND_MAP_FILE in its environment (a tool of its own can
 // do that), or with a ```wowmap fenced block in its reply for a few hand-made marks.
 // The system prompt (MAP_HINT) tells it so.
 // The bridge owns the resulting layers (state.json) and ships the whole set,
@@ -454,7 +498,7 @@ function extractMapBlocks(text) {
   return { text: stripped, cmds, errors };
 }
 
-// Commands the agent's tools appended to WOW_AI_MAP_FILE (one JSON per line).
+// Commands the agent's tools appended to AZERMIND_MAP_FILE (one JSON per line).
 function parseMapFile(src) {
   const cmds = [], errors = [];
   for (const line of String(src || '').split('\n')) {
@@ -546,6 +590,7 @@ function luaMacros(macros) {
 }
 
 module.exports = {
+  createStripAssembler,
   fromHex, pad3, slotNumber, chatKey, sessKey,
   alreadyHandled, markHandled, pruneStale, MONTH_MS,
   resolveCwd, sameFolder, baseName,

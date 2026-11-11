@@ -1,0 +1,28 @@
+## Interface: 16001
+## Title: AzerMind - World
+## Version: 1.0.12
+## LoadOnDemand: 1
+## Dependencies: AzerMind_Data
+npcs-1.lua
+npcs-2.lua
+npcs-3.lua
+npcs-4.lua
+npcs-5.lua
+npcs-6.lua
+npcs-7.lua
+npcs-8.lua
+npcs-9.lua
+npcs-10.lua
+npcs-11.lua
+npcs-12.lua
+npcs-13.lua
+npcs-14.lua
+objects-1.lua
+objects-2.lua
+objects-3.lua
+objects-4.lua
+objects-5.lua
+objects-6.lua
+objects-7.lua
+objects-8.lua
+Ready.lua

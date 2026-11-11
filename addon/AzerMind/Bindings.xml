@@ -1,0 +1,8 @@
+<Bindings>
+	<Binding name="AZERMIND_OPEN_CHAT" header="AZERMIND" category="BINDING_HEADER_AZERMIND">
+		AzerMind.Toggle(true)
+	</Binding>
+	<Binding name="AZERMIND_NEW_CHAT" category="BINDING_HEADER_AZERMIND">
+		AzerMind.NewChat()
+	</Binding>
+</Bindings>

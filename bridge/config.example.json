@@ -1,7 +1,7 @@
 {
   "addonDir": "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Interface\\AddOns",
-  "savedVariablesFile": "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\WoWAI.lua",
-  "inboxFile": "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Interface\\AddOns\\WoWAI\\Inbox.lua",
+  "savedVariablesFile": "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\WTF\\Account\\YOUR_ACCOUNT\\SavedVariables\\AzerMind.lua",
+  "inboxFile": "C:\\Program Files (x86)\\World of Warcraft\\_forever_\\Interface\\AddOns\\AzerMind\\Inbox.lua",
   "defaultCwd": "C:\\path\\to\\your\\project",
   "tocInterface": "16001",
   "slots": 200,
@@ -14,7 +14,7 @@
     "processName": "Wow",
     "cellPx": 4,
     "cellsPerRow": 200,
-    "maxRows": 48,
+    "maxRows": 96,
     "intervalMs": 250,
     "python": "python3",
     "windowName": "",
@@ -40,26 +40,34 @@
         "Bash(dir:*)"
       ],
       "deniedTools": [],
-      "extraArgs": []
+      "extraArgs": [],
+      "reasoning": "",
+      "models": []
     },
     "codex": {
       "path": "",
       "model": "",
       "permissionMode": "acceptEdits",
       "networkAccess": false,
-      "extraArgs": []
+      "extraArgs": [],
+      "reasoning": "",
+      "models": []
     },
     "agy": {
       "path": "",
       "model": "",
       "permissionMode": "acceptEdits",
-      "extraArgs": []
+      "extraArgs": [],
+      "reasoning": "",
+      "models": []
     },
     "hermes": {
       "path": "",
       "model": "",
       "permissionMode": "acceptEdits",
-      "extraArgs": []
+      "extraArgs": [],
+      "reasoning": "",
+      "models": []
     },
     "grok": {
       "path": "",
@@ -79,7 +87,9 @@
         "Bash(dir:*)"
       ],
       "deniedTools": [],
-      "extraArgs": []
+      "extraArgs": [],
+      "reasoning": "",
+      "models": []
     }
   },
   "gameContext": true,

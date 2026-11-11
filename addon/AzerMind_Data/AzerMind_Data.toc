@@ -1,0 +1,33 @@
+## Interface: 16001
+## Title: AzerMind - Catalog index
+## Version: 1.0.12
+## LoadOnDemand: 1
+Catalog.lua
+itemIndex-1.lua
+itemIndex-2.lua
+itemIndex-3.lua
+itemIndex-4.lua
+itemIndex-5.lua
+itemIndex-6.lua
+itemIndex-7.lua
+itemIndex-8.lua
+itemIndex-9.lua
+itemIndex-10.lua
+itemIndex-11.lua
+itemIndex-12.lua
+itemIndex-13.lua
+itemIndex-14.lua
+itemIndex-15.lua
+itemIndex-16.lua
+itemIndex-17.lua
+itemIndex-18.lua
+itemIndex-19.lua
+itemIndex-20.lua
+itemIndex-21.lua
+itemIndex-22.lua
+questIndex-1.lua
+questIndex-2.lua
+questIndex-3.lua
+questIndex-4.lua
+questIndex-5.lua
+questIndex-6.lua

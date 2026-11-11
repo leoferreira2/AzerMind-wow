@@ -1,0 +1,36 @@
+{
+  "previous": "d605067dcba3ea23f665756fd13d31a01a2bdb7a238dad705ca563da8171aa7f",
+  "current": "d605067dcba3ea23f665756fd13d31a01a2bdb7a238dad705ca563da8171aa7f",
+  "counts": {
+    "items": 21442,
+    "quests": 5233,
+    "npcs": 13417,
+    "objects": 7045
+  },
+  "warnings": {
+    "missingQuestReferences": 2,
+    "itemsWithoutSources": 9210
+  },
+  "diff": {
+    "items": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    },
+    "quests": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    },
+    "npcs": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    },
+    "objects": {
+      "added": [],
+      "changed": [],
+      "removed": []
+    }
+  }
+}

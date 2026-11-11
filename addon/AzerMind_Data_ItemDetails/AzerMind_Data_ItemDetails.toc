@@ -1,0 +1,28 @@
+## Interface: 16001
+## Title: AzerMind - ItemDetails
+## Version: 1.0.12
+## LoadOnDemand: 1
+## Dependencies: AzerMind_Data
+items-1.lua
+items-2.lua
+items-3.lua
+items-4.lua
+items-5.lua
+items-6.lua
+items-7.lua
+items-8.lua
+items-9.lua
+items-10.lua
+items-11.lua
+items-12.lua
+items-13.lua
+items-14.lua
+items-15.lua
+items-16.lua
+items-17.lua
+items-18.lua
+items-19.lua
+items-20.lua
+items-21.lua
+items-22.lua
+Ready.lua

@@ -1,6 +1,6 @@
 # Installing on Windows
 
-A start-to-finish walkthrough for a fresh Windows machine, ending with the `wow-ai` command available in any terminal. Coming from wow-claude, the project's old name? See [Upgrading from wow-claude](#upgrading-from-wow-claude). The short version is in the [README](../README.md); this page spells out every step and what can go wrong.
+A start-to-finish walkthrough for a fresh Windows machine, ending with the `azermind` command available in any terminal. Coming from wow-claude, the project's old name? See [Upgrading from wow-claude](#upgrading-from-wow-claude). The short version is in the [README](../README.md); this page spells out every step and what can go wrong.
 
 ## 1. Prerequisites
 
@@ -23,8 +23,8 @@ Open a new terminal after installing Node or Git so the `PATH` change is picked 
 
 ```powershell
 cd C:\Users\<you>\Documents          # or wherever you keep projects
-git clone https://github.com/chelinho139/wow-ai
-cd wow-ai
+# Download this AzerMind fork and extract it into an azermind folder.
+cd azermind
 npm install
 ```
 
@@ -39,20 +39,20 @@ node setup.js --project "C:\path\to\the\project\you\want\to\work\on"
 This:
 
 - finds the WoW: Forever client (it looks under `Program Files (x86)\World of Warcraft\_forever_` and a few other common places; pass `--wow "D:\Games\World of Warcraft\_forever_"` if it can't find yours),
-- copies the addon into `Interface\AddOns\WoWAI`,
+- copies the addon into `Interface\AddOns\AzerMind`,
 - writes `bridge\config.json` with your paths and the project folder,
 - reports which agent CLIs it found (Claude Code, Codex, Grok Build, Antigravity, Hermes); one is enough, and you can add another later,
 - creates the 200 reply-slot addons and about 15,000 tiny signal files next to it. That count is normal: the client only discovers addon files when it launches, so everything the bridge might ever touch has to exist up front.
 
-`--project` is the fallback folder for chats. Once the `wow-ai` command is installed (step 5) you'll usually pick the folder by where you start the bridge instead.
+`--project` is the fallback folder for chats. Once the `azermind` command is installed (step 5) you'll usually pick the folder by where you start the bridge instead.
 
 If you have several WoW accounts, setup picks the first and says so; pass `--account <name>` to choose.
 
-Now **fully quit and relaunch World of Warcraft** (a `/reload` is not enough, the new files have to be there at launch). On the character screen, open **AddOns** and make sure *WoW AI* is enabled. The 200 *WoW AI slot* entries stay enabled too; leave them alone.
+Now **fully quit and relaunch World of Warcraft** (a `/reload` is not enough, the new files have to be there at launch). On the character screen, open **AddOns** and make sure *AzerMind* is enabled. The 200 *AzerMind slot* entries stay enabled too; leave them alone.
 
 ## 4. First run
 
-From the `wow-ai` folder:
+From the `azermind` folder:
 
 ```powershell
 npm start
@@ -61,14 +61,14 @@ npm start
 You should see a banner like:
 
 ```
-WoW AI bridge
-  folder   : C:\path\to\your\project  (config.json; chats can override with /wow-ai cd)
+AzerMind bridge
+  folder   : C:\path\to\your\project  (config.json; chats can override with /azermind cd)
   addons   : C:\Program Files (x86)\World of Warcraft\_forever_\Interface\AddOns
   slots    : 200 installed
   capture  : on (Wow, 200x48 cells of 4px)
   parallel : up to 3 chats at once
   fallback : ...
-  agent    : claude (default; chats pick their own with /wow-ai agent)
+  agent    : claude (default; chats pick their own with /azermind agent)
   claude   : C:\Users\<you>\.local\bin\claude.exe  [acceptEdits, 11 allowed tool rules]
   codex    : not found - install it (npm install -g @openai/codex, then run `codex` once and log in) or set agents.codex.path in config.json
   grok     : C:\Users\<you>\.grok\bin\grok.exe  [acceptEdits, 11 allowed tool rules]
@@ -77,44 +77,44 @@ WoW AI bridge
 
 An agent shown as `not found` is fine as long as no chat uses it; a chat that picks it gets a reply saying so. The default (`agent` in `bridge\config.json`) must be one you have.
 
-In the game, type `/wow-ai`. The window opens; the light in its corner should turn green within about ten seconds. Type something in the box and press Enter. The reply arrives with the whisper sound.
+In the game, type `/azermind`. The window opens; the light in its corner should turn green within about ten seconds. Type something in the box and press Enter. The reply arrives with the whisper sound.
 
 If the light stays red, see [Troubleshooting](#troubleshooting).
 
-## 5. Install the `wow-ai` command
+## 5. Install the `azermind` command
 
-The bridge works in the folder you start it from, like the agent CLIs themselves. To be able to type `wow-ai` from any folder, install it once from inside the repo:
+The bridge works in the folder you start it from, like the agent CLIs themselves. To be able to type `azermind` from any folder, install it once from inside the repo:
 
 ```powershell
-cd C:\Users\<you>\Documents\wow-ai
+cd C:\Users\<you>\Documents\azermind
 npm link
 ```
 
-`npm link` puts a `wow-ai` launcher into npm's global folder (`%AppData%\npm`, already on your `PATH` since Node was installed) that points back at this repo. Nothing is copied: pulling a newer version of the repo updates the command, and `bridge\config.json` stays where `setup.js` wrote it.
+`npm link` puts a `azermind` launcher into npm's global folder (`%AppData%\npm`, already on your `PATH` since Node was installed) that points back at this repo. Nothing is copied: pulling a newer version of the repo updates the command, and `bridge\config.json` stays where `setup.js` wrote it.
 
 > Don't use `npm install -g .` instead. That copies the files into npm's global folder, where there is no `config.json`, and the bridge refuses to start.
 
 Check it:
 
 ```powershell
-wow-ai --help
+azermind --help
 ```
 
 Then use it from any project:
 
 ```powershell
 cd C:\path\to\realms
-wow-ai
+azermind
 ```
 
-The banner's `folder` line now says `started here`, and every chat that hasn't chosen its own folder with `/wow-ai cd` works in `realms`. `wow-ai --project <dir>` names the folder explicitly. Only one bridge can run at a time (two would fight over the screen and the slot files), so this sets the default folder rather than running one bridge per project.
+The banner's `folder` line now says `started here`, and every chat that hasn't chosen its own folder with `/azermind cd` works in `realms`. `azermind --project <dir>` names the folder explicitly. Only one bridge can run at a time (two would fight over the screen and the slot files), so this sets the default folder rather than running one bridge per project.
 
 Leave the window open while you play. Ctrl+C stops it. It restarts itself if it ever crashes.
 
 ### Updating
 
 ```powershell
-cd C:\Users\<you>\Documents\wow-ai
+cd C:\Users\<you>\Documents\azermind
 git pull
 node setup.js        # re-copies the addon; keeps your config.json and the slot pool
 ```
@@ -126,14 +126,14 @@ Then `/reload` in game and restart the bridge. If `setup.js` reports that it cre
 The release client lives in `_forever_` and its exe is `Wow.exe` (the beta's were `_classic_beta_` and `WowB.exe`). An install from the beta needs one step:
 
 ```powershell
-cd C:\Users\<you>\Documents\wow-ai
+cd C:\Users\<you>\Documents\azermind
 git pull
 node setup.js
 ```
 
 It moves `bridge/config.json` to `_forever_` (the paths and the process name; your other settings stay) and installs the addon and its slots there. It works before your first login, so you can do it ahead of launch. The beta folder is left alone.
 
-Then fully quit and relaunch the game, and enable "WoW AI" at the character select AddOns screen. Your chats come back from the bridge's `transcripts.json` the first time the addon talks to it.
+Then fully quit and relaunch the game, and enable "AzerMind" at the character select AddOns screen. Your chats come back from the bridge's `transcripts.json` the first time the addon talks to it.
 
 ### Upgrading from wow-claude
 
@@ -145,29 +145,29 @@ git pull
 node setup.js
 ```
 
-`setup.js` copies your chats and settings from `WoWClaude.lua` to `WoWAI.lua` in the game's SavedVariables, removes the old `WoWClaude` addon and its 200 `WoWClaude_S###` slot folders (two addons would both answer `/ai` and `/r`), rewrites the addon paths in `bridge\config.json`, moves the Claude settings under `agents.claude` and adds the `codex` and `grok` blocks, then builds the new slot pool. Quit and relaunch the game, and enable *WoW AI* on the AddOns screen. Your agent sessions carry on, since the bridge keeps them per chat.
+`setup.js` copies your chats and settings from `WoWClaude.lua` to `AzerMind.lua` in the game's SavedVariables, removes the old `WoWClaude` addon and its 200 `WoWClaude_S###` slot folders (two addons would both answer `/ai` and `/r`), rewrites the addon paths in `bridge\config.json`, moves the Claude settings under `agents.claude` and adds the `codex` and `grok` blocks, then builds the new slot pool. Quit and relaunch the game, and enable *AzerMind* on the AddOns screen. Your agent sessions carry on, since the bridge keeps them per chat.
 
-Then, if you had installed the command: `npm unlink -g wow-claude`, and `npm link` again from the repo folder (rename the folder to `wow-ai` first if you like; `npm link` follows whatever it is called). A hotkey set with `/wow-claude bind` needs `/wow-ai bind <key>` again, since it pointed at the old addon's button. `/wow-claude` itself keeps working as an alias of `/wow-ai`.
+Then, if you had installed the command: `npm unlink -g wow-claude`, and `npm link` again from the repo folder (rename the folder to `azermind` first if you like; `npm link` follows whatever it is called). A hotkey set with `/wow-claude bind` needs `/azermind bind <key>` again, since it pointed at the old addon's button. `/wow-claude` itself keeps working as an alias of `/azermind`.
 
 ### Uninstalling
 
 ```powershell
-npm unlink -g wow-ai      # removes the command
+npm unlink -g azermind      # removes the command
 ```
 
-Delete `Interface\AddOns\WoWAI` and the `WoWAI_S001` … `WoWAI_S200` folders next to it, and the `wow-ai` folder. Your chats' saved data is in `WTF\Account\<account>\SavedVariables\WoWAI.lua`.
+Delete `Interface\AddOns\AzerMind` and the `AzerMind_S001` … `AzerMind_S200` folders next to it, and the `azermind` folder. Your chats' saved data is in `WTF\Account\<account>\SavedVariables\AzerMind.lua`.
 
 ## Troubleshooting
 
-**`wow-ai` is not recognized.** Open a new terminal; `npm link` needs `%AppData%\npm` on the `PATH`, which the Node installer sets up but an already-open terminal doesn't see. Check with `npm prefix -g`: that folder must be in `$env:Path`.
+**`azermind` is not recognized.** Open a new terminal; `npm link` needs `%AppData%\npm` on the `PATH`, which the Node installer sets up but an already-open terminal doesn't see. Check with `npm prefix -g`: that folder must be in `$env:Path`.
 
-**PowerShell says "running scripts is disabled on this system".** npm creates three launchers (`wow-ai`, `wow-ai.cmd`, `wow-ai.ps1`) and PowerShell prefers the `.ps1` one, which a *Restricted* execution policy blocks. Either allow local scripts for your user:
+**PowerShell says "running scripts is disabled on this system".** npm creates three launchers (`azermind`, `azermind.cmd`, `azermind.ps1`) and PowerShell prefers the `.ps1` one, which a *Restricted* execution policy blocks. Either allow local scripts for your user:
 
 ```powershell
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-or type `wow-ai.cmd` instead, which bypasses the policy.
+or type `azermind.cmd` instead, which bypasses the policy.
 
 **"Cannot read config.json … Run node setup.js".** The command is pointing at a copy of the repo that hasn't been set up (usually `npm install -g .` was used instead of `npm link`, or the repo folder was moved). Run `npm link` again from the repo folder you set up.
 
@@ -181,4 +181,4 @@ or type `wow-ai.cmd` instead, which bypasses the policy.
 
 **Windows Defender or another antivirus complains about the slot files.** They are 15,000 empty or 124-byte files; nothing runs from them. Exclude `Interface\AddOns` if the scanner slows the bridge's writes down.
 
-**Everything else** is in the README's Troubleshooting section and in `/wow-ai diag` in game.
+**Everything else** is in the README's Troubleshooting section and in `/azermind diag` in game.

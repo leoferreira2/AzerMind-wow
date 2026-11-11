@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: AzerMind - QuestDetails
+## Version: 1.0.12
+## LoadOnDemand: 1
+## Dependencies: AzerMind_Data
+quests-1.lua
+quests-2.lua
+quests-3.lua
+quests-4.lua
+quests-5.lua
+quests-6.lua
+Ready.lua

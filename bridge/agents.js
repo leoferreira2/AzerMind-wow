@@ -336,7 +336,7 @@ function hermesParser() {
 // short context-only version on a resumed one (the primer is already in the
 // thread).
 function contextBlock(text) {
-  return `[Context from the WoW AI bridge, not written by the user]\n${text}\n[End of context]\n\n`;
+  return `[Context from the AzerMind bridge, not written by the user]\n${text}\n[End of context]\n\n`;
 }
 
 const AGENTS = {
@@ -353,6 +353,7 @@ const AGENTS = {
       const denied = Array.isArray(cfg.deniedTools) ? cfg.deniedTools.filter(Boolean) : [];
       if (denied.length) a.push('--disallowedTools', ...denied);
       if (cfg.model) a.push('--model', cfg.model);
+      if (cfg.reasoning) a.push('--effort', cfg.reasoning);
       if (resume) a.push('--resume', resume);
       if (system) a.push('--append-system-prompt', system);
       return a.concat(Array.isArray(cfg.extraArgs) ? cfg.extraArgs : []);
@@ -381,6 +382,7 @@ const AGENTS = {
       else a.push('--sandbox', mode === 'default' ? 'read-only' : 'workspace-write');
       if (cfg.model) a.push('-m', cfg.model);
       a.push(...(Array.isArray(cfg.extraArgs) ? cfg.extraArgs : []));
+      if (cfg.reasoning) a.push('-c', `model_reasoning_effort=${JSON.stringify(cfg.reasoning)}`);
       if (resume) a.push('resume', resume);
       for (const image of images || []) if (!String(image).startsWith('-')) a.push('-i', image);
       a.push('-'); // the prompt comes on stdin
@@ -420,6 +422,7 @@ const AGENTS = {
       for (const r of (Array.isArray(cfg.deniedTools) ? cfg.deniedTools : [])) denied.push(...grokRules(r));
       for (const r of new Set(denied)) a.push('--deny', r);
       if (cfg.model) a.push('-m', cfg.model);
+      if (cfg.reasoning && cfg.reasoningSupported) a.push('--effort', cfg.reasoning);
       if (resume) a.push('-r', resume);
       if (system) a.push('--append-system-prompt', system);
       return a.concat(Array.isArray(cfg.extraArgs) ? cfg.extraArgs : []);
@@ -450,6 +453,7 @@ const AGENTS = {
       else a.push('--dangerously-skip-permissions', '--disable-slash-commands');
       if (resume) a.push('--conversation', resume);
       if (cfg.model) a.push('--model', cfg.model);
+      if (cfg.reasoning) a.push('--effort', cfg.reasoning);
       return a.concat(Array.isArray(cfg.extraArgs) ? cfg.extraArgs : []);
     },
     input: () => ({}), env: env => env, parser: agyParser,
@@ -463,6 +467,7 @@ const AGENTS = {
       const a = ['chat', '--query-file', '-', '-Q', '--in', cwd, '--source', 'tool'];
       if (resume) a.push('--resume', resume);
       if (cfg.model) a.push('-m', cfg.model);
+      if (cfg.reasoning) a.push('--reasoning', cfg.reasoning);
       if (images && images.length && !String(images[0]).startsWith('-')) a.push('--image', images[0]);
       // R1: hermes never runs with --yolo from the bridge, even via extraArgs.
       return a.concat(Array.isArray(cfg.extraArgs) ? cfg.extraArgs.filter(x => !/^(-y|--yolo)(=.*)?$/.test(String(x))) : []);

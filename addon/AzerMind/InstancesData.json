@@ -1,0 +1,6736 @@
+{
+  "sourceSha256": "5e03da2beb21d3b67d6c1bf147c110b308e68e09504490986d647f729c7c090a",
+  "raidsSource": "https://news.blizzard.com/en-gb/article/24303009/world-of-warcraft-forever-raid-overviewlocations-raid-sizes-and-attunement",
+  "records": [
+    {
+      "id": 7088686,
+      "name": "Alcaz Prison",
+      "type": "Dungeon",
+      "level": "48-53",
+      "minLevel": 48,
+      "maxLevel": 53,
+      "location": "Dustwallow Marsh",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": null,
+      "bosses": [
+        {
+          "name": "Overseer Wrex",
+          "npcID": null,
+          "loot": [
+            {
+              "id": null,
+              "name": "Grips of Control"
+            },
+            {
+              "id": 276734,
+              "name": "Wrex's Pinky Ring"
+            }
+          ]
+        },
+        {
+          "name": "The Questioner",
+          "npcID": 256236,
+          "loot": [
+            {
+              "id": 276742,
+              "name": "Girdle of Extracted Answers"
+            },
+            {
+              "id": 276743,
+              "name": "Fingerbreaker Stamp"
+            },
+            {
+              "id": 276741,
+              "name": "Defias Enforcer's Shoulderpads"
+            }
+          ]
+        },
+        {
+          "name": "Tidemistress Ca'zass",
+          "npcID": 255997,
+          "loot": [
+            {
+              "id": null,
+              "name": "Tidesong Wand"
+            },
+            {
+              "id": 276736,
+              "name": "Seascale Bracers"
+            }
+          ]
+        },
+        {
+          "name": "Katerina the Cleaner",
+          "npcID": 257016,
+          "loot": [
+            {
+              "id": null,
+              "name": "Cutthroat Chestguard"
+            }
+          ]
+        },
+        {
+          "name": "Blazeroar",
+          "npcID": 255702,
+          "loot": []
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 287021,
+              "name": "Defias Enforcer's Prowlers"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 900000001,
+      "name": "Barrow Deeps",
+      "type": "Raid",
+      "level": "60",
+      "minLevel": 60,
+      "maxLevel": 60,
+      "location": "Mount Hyjal / Winterspring / Blackmaw Hold",
+      "size": 10,
+      "bossCount": 8,
+      "bosses": [],
+      "source": "https://news.blizzard.com/en-gb/article/24303009/world-of-warcraft-forever-raid-overviewlocations-raid-sizes-and-attunement",
+      "status": "Announced opening: 2026-12-09; availability must be checked against the current game."
+    },
+    {
+      "id": 161801427,
+      "name": "Blackfathom Deeps",
+      "type": "Dungeon",
+      "level": "24-32",
+      "minLevel": 24,
+      "maxLevel": 32,
+      "location": "Zoram Strand, Ashenvale",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1440,
+        "x": 0.145,
+        "y": 0.142
+      },
+      "bosses": [
+        {
+          "name": "Ghamoo-ra",
+          "npcID": 4887,
+          "loot": [
+            {
+              "id": 6907,
+              "name": "Tortoise Armor"
+            },
+            {
+              "id": 6908,
+              "name": "Ghamoo-ra's Bind"
+            },
+            {
+              "id": 273839,
+              "name": "Spiked Shell Band"
+            },
+            {
+              "id": 251382,
+              "name": "Plans: Protector's Silvered Chain Helm"
+            },
+            {
+              "id": 252801,
+              "name": "Pattern: Totemic Leather Hood"
+            },
+            {
+              "id": 253940,
+              "name": "Pattern: Filigreed Silky Leggings"
+            },
+            {
+              "id": 253942,
+              "name": "Pattern: Filigreed Flame Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Lady Sarevess",
+          "npcID": 4831,
+          "loot": [
+            {
+              "id": 888,
+              "name": "Naga Battle Gloves"
+            },
+            {
+              "id": 3078,
+              "name": "Naga Heartpiercer"
+            },
+            {
+              "id": 11121,
+              "name": "Darkwater Talwar"
+            },
+            {
+              "id": 252798,
+              "name": "Pattern: Brawler's Leather Hood"
+            },
+            {
+              "id": 251382,
+              "name": "Plans: Protector's Silvered Chain Helm"
+            },
+            {
+              "id": 251383,
+              "name": "Plans: Acolyte's Silvered Chain Helm"
+            },
+            {
+              "id": 253944,
+              "name": "Pattern: Filigreed Shadow Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Gelihast",
+          "npcID": 6243,
+          "loot": [
+            {
+              "id": 6906,
+              "name": "Algae Fists"
+            },
+            {
+              "id": 6905,
+              "name": "Reef Axe"
+            },
+            {
+              "id": 1470,
+              "name": "Murloc Skin Bag"
+            },
+            {
+              "id": 273840,
+              "name": "Cursed Murloc Eye"
+            },
+            {
+              "id": 251375,
+              "name": "Plans: Veteran's Silvered Chain Leggings"
+            },
+            {
+              "id": 251377,
+              "name": "Plans: Protector's Silvered Chain Leggings"
+            },
+            {
+              "id": 252820,
+              "name": "Pattern: Brawler's Leather Legguards"
+            },
+            {
+              "id": 252821,
+              "name": "Pattern: Trapper's Leather Legguards"
+            },
+            {
+              "id": 252825,
+              "name": "Pattern: Wisdom's Leather Leggings"
+            },
+            {
+              "id": 253978,
+              "name": "Pattern: Filigreed Silky Circlet"
+            },
+            {
+              "id": 253980,
+              "name": "Pattern: Filigreed Flame Circlet"
+            },
+            {
+              "id": 273141,
+              "name": "Blueprint: Fishing Rack"
+            }
+          ]
+        },
+        {
+          "name": "Lorgus Jett",
+          "npcID": 12902,
+          "loot": [
+            {
+              "id": 273843,
+              "name": "Fallenroot Longbow"
+            },
+            {
+              "id": 273841,
+              "name": "Twilight Maul"
+            },
+            {
+              "id": 273842,
+              "name": "Treacherous Treads"
+            },
+            {
+              "id": 253978,
+              "name": "Pattern: Filigreed Silky Circlet"
+            },
+            {
+              "id": 253982,
+              "name": "Pattern: Filigreed Shadow Circlet"
+            },
+            {
+              "id": 251377,
+              "name": "Plans: Protector's Silvered Chain Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Old Serra'kis",
+          "npcID": 4830,
+          "loot": [
+            {
+              "id": 6901,
+              "name": "Glowing Thresher Cape"
+            },
+            {
+              "id": 6904,
+              "name": "Bite of Serra'kis"
+            },
+            {
+              "id": 6902,
+              "name": "Bands of Serra'kis"
+            },
+            {
+              "id": 251375,
+              "name": "Plans: Veteran's Silvered Chain Leggings"
+            },
+            {
+              "id": 252825,
+              "name": "Pattern: Wisdom's Leather Leggings"
+            },
+            {
+              "id": 253978,
+              "name": "Pattern: Filigreed Silky Circlet"
+            },
+            {
+              "id": 253982,
+              "name": "Pattern: Filigreed Shadow Circlet"
+            }
+          ]
+        },
+        {
+          "name": "Twilight Lord Kelris",
+          "npcID": 4832,
+          "loot": [
+            {
+              "id": 1155,
+              "name": "Rod of the Sleepwalker"
+            },
+            {
+              "id": 6903,
+              "name": "Gaze Dreamer Pants"
+            },
+            {
+              "id": 273846,
+              "name": "Twilight Lord Girdle"
+            },
+            {
+              "id": 252820,
+              "name": "Pattern: Brawler's Leather Legguards"
+            },
+            {
+              "id": 252821,
+              "name": "Pattern: Trapper's Leather Legguards"
+            },
+            {
+              "id": 252822,
+              "name": "Pattern: Defender's Leather Kilt"
+            },
+            {
+              "id": 252823,
+              "name": "Pattern: Totemic Leather Leggings"
+            },
+            {
+              "id": 252825,
+              "name": "Pattern: Wisdom's Leather Leggings"
+            },
+            {
+              "id": 253982,
+              "name": "Pattern: Filigreed Shadow Circlet"
+            }
+          ]
+        },
+        {
+          "name": "Aku'mai",
+          "npcID": 4829,
+          "loot": [
+            {
+              "id": 6911,
+              "name": "Moss Cinch"
+            },
+            {
+              "id": 6910,
+              "name": "Leech Pants"
+            },
+            {
+              "id": 6909,
+              "name": "Strike of the Hydra"
+            },
+            {
+              "id": 251376,
+              "name": "Plans: Guard's Silvered Chain Leggings"
+            },
+            {
+              "id": 251377,
+              "name": "Plans: Protector's Silvered Chain Leggings"
+            },
+            {
+              "id": 251378,
+              "name": "Plans: Acolyte's Silvered Chain Leggings"
+            },
+            {
+              "id": 252821,
+              "name": "Pattern: Trapper's Leather Legguards"
+            },
+            {
+              "id": 252824,
+              "name": "Pattern: Stormrider's Leather Kilt"
+            },
+            {
+              "id": 253980,
+              "name": "Pattern: Filigreed Flame Circlet"
+            },
+            {
+              "id": 253984,
+              "name": "Pattern: Filigreed Pearly Circlet"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 1454,
+              "name": "Axe of the Enforcer"
+            },
+            {
+              "id": 1481,
+              "name": "Grimclaw"
+            },
+            {
+              "id": 3413,
+              "name": "Doomspike"
+            },
+            {
+              "id": 2567,
+              "name": "Evocator's Blade"
+            },
+            {
+              "id": 3414,
+              "name": "Crested Scepter"
+            },
+            {
+              "id": 3415,
+              "name": "Staff of the Friar"
+            },
+            {
+              "id": 2271,
+              "name": "Staff of the Blessed Seer"
+            },
+            {
+              "id": 3417,
+              "name": "Onyx Claymore"
+            },
+            {
+              "id": 1491,
+              "name": "Ring of Precision"
+            },
+            {
+              "id": 1486,
+              "name": "Tree Bark Jacket"
+            },
+            {
+              "id": 3416,
+              "name": "Martyr's Chain"
+            },
+            {
+              "id": 2034,
+              "name": "Scholarly Robes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 52204120,
+      "name": "Blackmaw Hold",
+      "type": "Dungeon",
+      "level": "55-60",
+      "minLevel": 55,
+      "maxLevel": 60,
+      "location": "Azshara",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": null,
+      "bosses": [
+        {
+          "name": "Withermaw",
+          "npcID": 247195,
+          "loot": [
+            {
+              "id": null,
+              "name": "Withering Grips"
+            }
+          ]
+        },
+        {
+          "name": "Impaan the Imprisoner",
+          "npcID": 247206,
+          "loot": [
+            {
+              "id": null,
+              "name": "Impish Chain Hood"
+            }
+          ]
+        },
+        {
+          "name": "Elder Shaman Bloodmane",
+          "npcID": 247209,
+          "loot": []
+        },
+        {
+          "name": "Bonesnout the Unbroken",
+          "npcID": 247198,
+          "loot": [
+            {
+              "id": null,
+              "name": "Lucky Shovelnose Tuft"
+            }
+          ]
+        },
+        {
+          "name": "Varrox Bleakhoof",
+          "npcID": 247234,
+          "loot": []
+        },
+        {
+          "name": "Blackmaw Behemoth",
+          "npcID": 247207,
+          "loot": []
+        },
+        {
+          "name": "Unbound Spirit",
+          "npcID": 247231,
+          "loot": []
+        },
+        {
+          "name": "Moontouched Wanderer",
+          "npcID": 269104,
+          "loot": [
+            {
+              "id": null,
+              "name": "Claymore of Two Moons"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": null,
+              "name": "Satyr's Touch"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 171447989,
+      "name": "Blackrock Depths",
+      "type": "Dungeon",
+      "level": "52-60",
+      "minLevel": 52,
+      "maxLevel": 60,
+      "location": "Blackrock Mountain",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1427,
+        "x": 0.348,
+        "y": 0.84
+      },
+      "bosses": [
+        {
+          "name": "High Interrogator Gerstahn",
+          "npcID": 9018,
+          "loot": [
+            {
+              "id": 11624,
+              "name": "Kentic Amice"
+            },
+            {
+              "id": 11625,
+              "name": "Enthralled Sphere"
+            },
+            {
+              "id": 11626,
+              "name": "Blackveil Cape"
+            },
+            {
+              "id": 22240,
+              "name": "Greaves of Withering Despair"
+            }
+          ]
+        },
+        {
+          "name": "Lord Roccor",
+          "npcID": 9025,
+          "loot": [
+            {
+              "id": 11632,
+              "name": "Earthslag Shoulders"
+            },
+            {
+              "id": 11631,
+              "name": "Stoneshell Guard"
+            },
+            {
+              "id": 22234,
+              "name": "Mantle of Lost Hope"
+            },
+            {
+              "id": 22397,
+              "name": "Idol of Ferocity"
+            },
+            {
+              "id": 11630,
+              "name": "Rockshard Pellets"
+            }
+          ]
+        },
+        {
+          "name": "Houndmaster Grebmar",
+          "npcID": 9319,
+          "loot": [
+            {
+              "id": 11627,
+              "name": "Fleetfoot Greaves"
+            },
+            {
+              "id": 11623,
+              "name": "Spritecaster Cape"
+            },
+            {
+              "id": 11628,
+              "name": "Houndmaster's Bow"
+            },
+            {
+              "id": 11629,
+              "name": "Houndmaster's Rifle"
+            }
+          ]
+        },
+        {
+          "name": "Gorosh the Dervish",
+          "npcID": 9027,
+          "loot": [
+            {
+              "id": 11726,
+              "name": "Savage Gladiator Chain"
+            },
+            {
+              "id": 22257,
+              "name": "Bloodclot Band"
+            },
+            {
+              "id": 22266,
+              "name": "Flarethorn"
+            },
+            {
+              "id": 22271,
+              "name": "Leggings of Frenzied Magic"
+            }
+          ]
+        },
+        {
+          "name": "Grizzle",
+          "npcID": 9028,
+          "loot": [
+            {
+              "id": 11702,
+              "name": "Grizzle's Skinner"
+            },
+            {
+              "id": 11703,
+              "name": "Stonewall Girdle"
+            },
+            {
+              "id": 11722,
+              "name": "Dregmetal Spaulders"
+            },
+            {
+              "id": 22270,
+              "name": "Entrenching Boots"
+            },
+            {
+              "id": 11610,
+              "name": "Plans: Dark Iron Pulverizer"
+            }
+          ]
+        },
+        {
+          "name": "Eviscerator",
+          "npcID": 9029,
+          "loot": [
+            {
+              "id": 11679,
+              "name": "Rubicund Armguards"
+            },
+            {
+              "id": 11685,
+              "name": "Splinthide Shoulders"
+            },
+            {
+              "id": 11686,
+              "name": "Girdle of Beastial Fury"
+            },
+            {
+              "id": 11730,
+              "name": "Savage Gladiator Grips"
+            }
+          ]
+        },
+        {
+          "name": "Ok'thor the Breaker",
+          "npcID": 9030,
+          "loot": [
+            {
+              "id": 11662,
+              "name": "Ban'thok Sash"
+            },
+            {
+              "id": 11665,
+              "name": "Ogreseer Fists"
+            },
+            {
+              "id": 11824,
+              "name": "Cyclopean Band"
+            },
+            {
+              "id": 11728,
+              "name": "Savage Gladiator Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Anub'shiah",
+          "npcID": 9031,
+          "loot": [
+            {
+              "id": 11675,
+              "name": "Shadefiend Boots"
+            },
+            {
+              "id": 11677,
+              "name": "Graverot Cape"
+            },
+            {
+              "id": 11678,
+              "name": "Carapace of Anub'shiah"
+            },
+            {
+              "id": 11731,
+              "name": "Savage Gladiator Greaves"
+            }
+          ]
+        },
+        {
+          "name": "Hedrum the Creeper",
+          "npcID": 9032,
+          "loot": [
+            {
+              "id": 11633,
+              "name": "Spiderfang Carapace"
+            },
+            {
+              "id": 11634,
+              "name": "Silkweb Gloves"
+            },
+            {
+              "id": 11635,
+              "name": "Hookfang Shanker"
+            },
+            {
+              "id": 11729,
+              "name": "Savage Gladiator Helm"
+            }
+          ]
+        },
+        {
+          "name": "Pyromancer Loregrain",
+          "npcID": 9024,
+          "loot": [
+            {
+              "id": 11747,
+              "name": "Flamestrider Robes"
+            },
+            {
+              "id": 11748,
+              "name": "Pyric Caduceus"
+            },
+            {
+              "id": 11749,
+              "name": "Searingscale Leggings"
+            },
+            {
+              "id": 11750,
+              "name": "Kindling Stave"
+            }
+          ]
+        },
+        {
+          "name": "Fineous Darkvire",
+          "npcID": 9056,
+          "loot": [
+            {
+              "id": 11841,
+              "name": "Senior Designer's Pantaloons"
+            },
+            {
+              "id": 11842,
+              "name": "Lead Surveyor's Mantle"
+            },
+            {
+              "id": 11839,
+              "name": "Chief Architect's Monocle"
+            },
+            {
+              "id": 22223,
+              "name": "Foreman's Head Protector"
+            }
+          ]
+        },
+        {
+          "name": "Warder Stilgiss",
+          "npcID": 9041,
+          "loot": [
+            {
+              "id": 11782,
+              "name": "Boreal Mantle"
+            },
+            {
+              "id": 11783,
+              "name": "Chillsteel Girdle"
+            },
+            {
+              "id": 11784,
+              "name": "Arbiter's Blade"
+            },
+            {
+              "id": 22241,
+              "name": "Dark Warder's Pauldrons"
+            },
+            {
+              "id": 11755,
+              "name": "Verek's Collar"
+            },
+            {
+              "id": 22242,
+              "name": "Verek's Leash"
+            }
+          ]
+        },
+        {
+          "name": "Lord Incendius",
+          "npcID": 9017,
+          "loot": [
+            {
+              "id": 11764,
+              "name": "Cinderhide Armsplints"
+            },
+            {
+              "id": 11765,
+              "name": "Pyremail Wristguards"
+            },
+            {
+              "id": 11766,
+              "name": "Flameweave Cuffs"
+            },
+            {
+              "id": 11767,
+              "name": "Emberplate Armguards"
+            }
+          ]
+        },
+        {
+          "name": "Bael'Gar",
+          "npcID": 9016,
+          "loot": [
+            {
+              "id": 11802,
+              "name": "Lavacrest Leggings"
+            },
+            {
+              "id": 11803,
+              "name": "Force of Magma"
+            },
+            {
+              "id": 11805,
+              "name": "Rubidium Hammer"
+            },
+            {
+              "id": 11807,
+              "name": "Sash of the Burning Heart"
+            }
+          ]
+        },
+        {
+          "name": "General Angerforge",
+          "npcID": 9033,
+          "loot": [
+            {
+              "id": 11816,
+              "name": "Angerforge's Battle Axe"
+            },
+            {
+              "id": 11820,
+              "name": "Royal Decorated Armor"
+            },
+            {
+              "id": 11821,
+              "name": "Warstrife Leggings"
+            },
+            {
+              "id": 11817,
+              "name": "Lord General's Sword"
+            },
+            {
+              "id": 11810,
+              "name": "Force of Will"
+            }
+          ]
+        },
+        {
+          "name": "Golem Lord Argelmach",
+          "npcID": 8983,
+          "loot": [
+            {
+              "id": 11822,
+              "name": "Omnicast Boots"
+            },
+            {
+              "id": 11823,
+              "name": "Luminary Kilt"
+            },
+            {
+              "id": 11669,
+              "name": "Naglering"
+            },
+            {
+              "id": 11819,
+              "name": "Second Wind"
+            }
+          ]
+        },
+        {
+          "name": "Hurley Blackbreath",
+          "npcID": 9537,
+          "loot": [
+            {
+              "id": 18044,
+              "name": "Hurley's Tankard"
+            },
+            {
+              "id": 18043,
+              "name": "Coal Miner Boots"
+            },
+            {
+              "id": 22275,
+              "name": "Firemoss Boots"
+            },
+            {
+              "id": 11735,
+              "name": "Ragefury Eyepatch"
+            }
+          ]
+        },
+        {
+          "name": "Phalanx",
+          "npcID": 9502,
+          "loot": [
+            {
+              "id": 11745,
+              "name": "Fists of Phalanx"
+            },
+            {
+              "id": 11744,
+              "name": "Bloodfist"
+            },
+            {
+              "id": 22212,
+              "name": "Golem Fitted Pauldrons"
+            },
+            {
+              "id": 11746,
+              "name": "Golem Skull Helm"
+            }
+          ]
+        },
+        {
+          "name": "Ribbly Screwspigot",
+          "npcID": 9543,
+          "loot": [
+            {
+              "id": 11612,
+              "name": "Plans: Dark Iron Plate"
+            }
+          ]
+        },
+        {
+          "name": "Plugger Spazzring",
+          "npcID": 9499,
+          "loot": [
+            {
+              "id": 12793,
+              "name": "Mixologist's Tunic"
+            },
+            {
+              "id": 12791,
+              "name": "Barman Shanker"
+            }
+          ]
+        },
+        {
+          "name": "Ambassador Flamelash",
+          "npcID": 9156,
+          "loot": [
+            {
+              "id": 11812,
+              "name": "Cape of the Fire Salamander"
+            },
+            {
+              "id": 11814,
+              "name": "Molten Fists"
+            },
+            {
+              "id": 11809,
+              "name": "Flame Wrath"
+            },
+            {
+              "id": 11832,
+              "name": "Burst of Knowledge"
+            }
+          ]
+        },
+        {
+          "name": "Panzor the Invincible",
+          "npcID": 8923,
+          "loot": [
+            {
+              "id": 11787,
+              "name": "Shalehusk Boots"
+            },
+            {
+              "id": 11786,
+              "name": "Stone of the Earth"
+            },
+            {
+              "id": 11785,
+              "name": "Rock Golem Bulwark"
+            },
+            {
+              "id": 22245,
+              "name": "Soot Encrusted Footwear"
+            }
+          ]
+        },
+        {
+          "name": "The Seven",
+          "npcID": 9039,
+          "loot": [
+            {
+              "id": 11920,
+              "name": "Wraith Scythe"
+            },
+            {
+              "id": 11921,
+              "name": "Impervious Giant"
+            },
+            {
+              "id": 11922,
+              "name": "Blood-etched Blade"
+            },
+            {
+              "id": 11926,
+              "name": "Deathdealer Breastplate"
+            },
+            {
+              "id": 11927,
+              "name": "Legplates of the Eternal Guardian"
+            }
+          ]
+        },
+        {
+          "name": "Magmus",
+          "npcID": 9938,
+          "loot": [
+            {
+              "id": 11935,
+              "name": "Magmus Stone"
+            },
+            {
+              "id": 22208,
+              "name": "Lavastone Hammer"
+            },
+            {
+              "id": 22395,
+              "name": "Totem of Rage"
+            },
+            {
+              "id": 22400,
+              "name": "Libram of Truth"
+            },
+            {
+              "id": 11746,
+              "name": "Golem Skull Helm"
+            }
+          ]
+        },
+        {
+          "name": "Princess Moira Bronzebeard",
+          "npcID": 8929,
+          "loot": [
+            {
+              "id": 12553,
+              "name": "Swiftwalker Boots"
+            },
+            {
+              "id": 12554,
+              "name": "Hands of the Exalted Herald"
+            },
+            {
+              "id": 12556,
+              "name": "High Priestess Boots"
+            },
+            {
+              "id": 12557,
+              "name": "Ebonsteel Spaulders"
+            }
+          ]
+        },
+        {
+          "name": "Emperor Dagran Thaurissan",
+          "npcID": 9019,
+          "loot": [
+            {
+              "id": 11815,
+              "name": "Hand of Justice"
+            },
+            {
+              "id": 11924,
+              "name": "Robes of the Royal Crown"
+            },
+            {
+              "id": 11928,
+              "name": "Thaurissan's Royal Scepter"
+            },
+            {
+              "id": 11930,
+              "name": "The Emperor's New Cape"
+            },
+            {
+              "id": 11931,
+              "name": "Dreadforge Retaliator"
+            },
+            {
+              "id": 11932,
+              "name": "Guiding Stave of Wisdom"
+            },
+            {
+              "id": 11933,
+              "name": "Imperial Jewel"
+            },
+            {
+              "id": 11934,
+              "name": "Emperor's Seal"
+            },
+            {
+              "id": 22204,
+              "name": "Wristguards of Renown"
+            },
+            {
+              "id": 22207,
+              "name": "Sash of the Grand Hunt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11952272,
+      "name": "City of Dalaran",
+      "type": "Dungeon",
+      "level": "28-33",
+      "minLevel": 28,
+      "maxLevel": 33,
+      "location": "Alterac Mountains",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1416,
+        "x": 0.085,
+        "y": 0.593
+      },
+      "bosses": [
+        {
+          "name": "Atrexis the Grave Knight",
+          "npcID": 247126,
+          "loot": [
+            {
+              "id": 273032,
+              "name": "Bonebinder's Signet"
+            },
+            {
+              "id": 273036,
+              "name": "Graveweave Bindings"
+            },
+            {
+              "id": 273033,
+              "name": "Gravespike Repeater"
+            }
+          ]
+        },
+        {
+          "name": "Arcane Anomaly",
+          "npcID": 245999,
+          "loot": [
+            {
+              "id": 273034,
+              "name": "Ephemeral Grips"
+            },
+            {
+              "id": 273031,
+              "name": "Runemender's Seal"
+            },
+            {
+              "id": 273035,
+              "name": "Mana-Warped Chain Shirt"
+            }
+          ]
+        },
+        {
+          "name": "Fel Ancient",
+          "npcID": 246003,
+          "loot": [
+            {
+              "id": 273037,
+              "name": "Felbough Arm"
+            },
+            {
+              "id": 273039,
+              "name": "Blightleaf Rope"
+            },
+            {
+              "id": 273038,
+              "name": "Garb of Fallen Felbark"
+            }
+          ]
+        },
+        {
+          "name": "Unstable Sentinel",
+          "npcID": 246017,
+          "loot": [
+            {
+              "id": 273046,
+              "name": "Guardian's Dualblade"
+            },
+            {
+              "id": 273047,
+              "name": "Unstable Crystalline Shoulderpads"
+            },
+            {
+              "id": 273048,
+              "name": "Refractory Scaleguards"
+            },
+            {
+              "id": 273099,
+              "name": "Blueprint: Spinning Wheel"
+            }
+          ]
+        },
+        {
+          "name": "Mana Devourer",
+          "npcID": 246008,
+          "loot": [
+            {
+              "id": 273041,
+              "name": "Slitherwrap Girdle"
+            },
+            {
+              "id": 273040,
+              "name": "Spine of the Devourer"
+            },
+            {
+              "id": 273042,
+              "name": "Manascale Treads"
+            }
+          ]
+        },
+        {
+          "name": "Arcanic Enigma",
+          "npcID": 246016,
+          "loot": [
+            {
+              "id": 273045,
+              "name": "Drape of Shifting Energy"
+            },
+            {
+              "id": 273044,
+              "name": "Violet Sorcerer's Robes"
+            },
+            {
+              "id": 273043,
+              "name": "Wand of Mana Concentration"
+            }
+          ]
+        },
+        {
+          "name": "Lyn the Ignored",
+          "npcID": 247032,
+          "loot": [
+            {
+              "id": 273055,
+              "name": "Bonepile Gaze"
+            },
+            {
+              "id": 273054,
+              "name": "Cartilage Shapers"
+            },
+            {
+              "id": 273053,
+              "name": "Tendonscraper Dagger"
+            }
+          ]
+        },
+        {
+          "name": "Shade of the Archmage",
+          "npcID": 246020,
+          "loot": [
+            {
+              "id": 273052,
+              "name": "Ponderous Orb"
+            },
+            {
+              "id": 273049,
+              "name": "Archmagister's Faceted Pendant"
+            },
+            {
+              "id": 273051,
+              "name": "Violet Sorcerer's Mantle"
+            },
+            {
+              "id": 273103,
+              "name": "Blueprint: Arcane Salvager"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 286987,
+              "name": "Violet Sorcerer's Sandals"
+            },
+            {
+              "id": 286989,
+              "name": "Violet Sorcerer's Wraps"
+            },
+            {
+              "id": 286988,
+              "name": "Violet Sorcerer's Leggings"
+            },
+            {
+              "id": 286995,
+              "name": "Guardian's Emblem"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 241867625,
+      "name": "Dire Maul: East",
+      "type": "Dungeon",
+      "level": "55-60",
+      "minLevel": 55,
+      "maxLevel": 60,
+      "location": "Feralas",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1444,
+        "x": 0.59,
+        "y": 0.45
+      },
+      "bosses": [
+        {
+          "name": "Zevrim Thornhoof",
+          "npcID": 11490,
+          "loot": [
+            {
+              "id": 18313,
+              "name": "Helm of Awareness"
+            },
+            {
+              "id": 18323,
+              "name": "Satyr's Bow"
+            },
+            {
+              "id": 18319,
+              "name": "Fervent Helm"
+            }
+          ]
+        },
+        {
+          "name": "Hydrospawn",
+          "npcID": 13280,
+          "loot": [
+            {
+              "id": 18322,
+              "name": "Waterspout Boots"
+            },
+            {
+              "id": 18317,
+              "name": "Tempest Talisman"
+            },
+            {
+              "id": 18324,
+              "name": "Waveslicer"
+            }
+          ]
+        },
+        {
+          "name": "Lethtendris",
+          "npcID": 14327,
+          "loot": [
+            {
+              "id": 18325,
+              "name": "Felhide Cap"
+            },
+            {
+              "id": 18311,
+              "name": "Quel'dorai Channeling Rod"
+            }
+          ]
+        },
+        {
+          "name": "Alzzin the Wildshaper",
+          "npcID": 11492,
+          "loot": [
+            {
+              "id": 18309,
+              "name": "Gloves of Restoration"
+            },
+            {
+              "id": 18310,
+              "name": "Fiendish Machete"
+            },
+            {
+              "id": 18312,
+              "name": "Energized Chestplate"
+            },
+            {
+              "id": 18314,
+              "name": "Ring of Demonic Guile"
+            },
+            {
+              "id": 18315,
+              "name": "Ring of Demonic Potency"
+            },
+            {
+              "id": 18318,
+              "name": "Merciful Greaves"
+            },
+            {
+              "id": 18321,
+              "name": "Energetic Rod"
+            },
+            {
+              "id": 18326,
+              "name": "Razor Gauntlets"
+            },
+            {
+              "id": 18327,
+              "name": "Whipvine Cord"
+            },
+            {
+              "id": 18328,
+              "name": "Shadewood Cloak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 158661359,
+      "name": "Dire Maul: North",
+      "type": "Dungeon",
+      "level": "57-60",
+      "minLevel": 57,
+      "maxLevel": 60,
+      "location": "Feralas",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1444,
+        "x": 0.59,
+        "y": 0.45
+      },
+      "bosses": [
+        {
+          "name": "Guard Mol'dar",
+          "npcID": 14326,
+          "loot": [
+            {
+              "id": 18494,
+              "name": "Denwatcher's Shoulders"
+            },
+            {
+              "id": 18493,
+              "name": "Bulky Iron Spaulders"
+            },
+            {
+              "id": 18496,
+              "name": "Heliotrope Cloak"
+            },
+            {
+              "id": 18497,
+              "name": "Sublime Wristguards"
+            },
+            {
+              "id": 18498,
+              "name": "Hedgecutter"
+            }
+          ]
+        },
+        {
+          "name": "Stomper Kreeg",
+          "npcID": 14322,
+          "loot": [
+            {
+              "id": 18425,
+              "name": "Kreeg's Mug"
+            }
+          ]
+        },
+        {
+          "name": "Guard Fengus",
+          "npcID": 14321,
+          "loot": [
+            {
+              "id": 18494,
+              "name": "Denwatcher's Shoulders"
+            },
+            {
+              "id": 18493,
+              "name": "Bulky Iron Spaulders"
+            },
+            {
+              "id": 18496,
+              "name": "Heliotrope Cloak"
+            },
+            {
+              "id": 18497,
+              "name": "Sublime Wristguards"
+            },
+            {
+              "id": 18498,
+              "name": "Hedgecutter"
+            }
+          ]
+        },
+        {
+          "name": "Guard Slip'kik",
+          "npcID": 14323,
+          "loot": [
+            {
+              "id": 18494,
+              "name": "Denwatcher's Shoulders"
+            },
+            {
+              "id": 18493,
+              "name": "Bulky Iron Spaulders"
+            },
+            {
+              "id": 18496,
+              "name": "Heliotrope Cloak"
+            },
+            {
+              "id": 18497,
+              "name": "Sublime Wristguards"
+            },
+            {
+              "id": 18498,
+              "name": "Hedgecutter"
+            }
+          ]
+        },
+        {
+          "name": "Captain Kromcrush",
+          "npcID": 14325,
+          "loot": [
+            {
+              "id": 18503,
+              "name": "Kromcrush's Chestplate"
+            },
+            {
+              "id": 18507,
+              "name": "Boots of the Full Moon"
+            },
+            {
+              "id": 18502,
+              "name": "Monstrous Glaive"
+            },
+            {
+              "id": 18505,
+              "name": "Mugger's Belt"
+            }
+          ]
+        },
+        {
+          "name": "Cho'Rush the Observer",
+          "npcID": 14324,
+          "loot": [
+            {
+              "id": 18483,
+              "name": "Mana Channeling Wand"
+            },
+            {
+              "id": 18484,
+              "name": "Cho'Rush's Blade"
+            },
+            {
+              "id": 18485,
+              "name": "Observer's Shield"
+            },
+            {
+              "id": 18490,
+              "name": "Insightful Hood"
+            }
+          ]
+        },
+        {
+          "name": "King Gordok",
+          "npcID": 11501,
+          "loot": [
+            {
+              "id": 18526,
+              "name": "Crown of the Ogre King"
+            },
+            {
+              "id": 18525,
+              "name": "Bracers of Prosperity"
+            },
+            {
+              "id": 18527,
+              "name": "Harmonious Gauntlets"
+            },
+            {
+              "id": 18524,
+              "name": "Leggings of Destruction"
+            },
+            {
+              "id": 18521,
+              "name": "Grimy Metal Boots"
+            },
+            {
+              "id": 18520,
+              "name": "Barbarous Blade"
+            },
+            {
+              "id": 18522,
+              "name": "Band of the Ogre King"
+            },
+            {
+              "id": 18523,
+              "name": "Brightly Glowing Stone"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 194101554,
+      "name": "Dire Maul: West",
+      "type": "Dungeon",
+      "level": "57-60",
+      "minLevel": 57,
+      "maxLevel": 60,
+      "location": "Feralas",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1444,
+        "x": 0.59,
+        "y": 0.45
+      },
+      "bosses": [
+        {
+          "name": "Tendris Warpwood",
+          "npcID": 11489,
+          "loot": [
+            {
+              "id": 18390,
+              "name": "Tanglemoss Leggings"
+            },
+            {
+              "id": 18393,
+              "name": "Warpwood Binding"
+            }
+          ]
+        },
+        {
+          "name": "Illyanna Ravenoak",
+          "npcID": 11488,
+          "loot": [
+            {
+              "id": 18383,
+              "name": "Force Imbued Gauntlets"
+            },
+            {
+              "id": 18386,
+              "name": "Padre's Trousers"
+            }
+          ]
+        },
+        {
+          "name": "Tsu'zee",
+          "npcID": 11467,
+          "loot": [
+            {
+              "id": 18387,
+              "name": "Brightspark Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Magister Kalendris",
+          "npcID": 11487,
+          "loot": [
+            {
+              "id": 18374,
+              "name": "Flamescarred Shoulders"
+            },
+            {
+              "id": 18397,
+              "name": "Elder Magus Pendant"
+            },
+            {
+              "id": 18371,
+              "name": "Mindtap Talisman"
+            }
+          ]
+        },
+        {
+          "name": "Immol'thar",
+          "npcID": 11496,
+          "loot": [
+            {
+              "id": 18377,
+              "name": "Quickdraw Gloves"
+            },
+            {
+              "id": 18379,
+              "name": "Odious Greaves"
+            },
+            {
+              "id": 18381,
+              "name": "Evil Eye Pendant"
+            },
+            {
+              "id": 18391,
+              "name": "Eyestalk Cord"
+            },
+            {
+              "id": 18385,
+              "name": "Robe of Everlasting Night"
+            },
+            {
+              "id": 18384,
+              "name": "Bile-etched Spaulders"
+            },
+            {
+              "id": 18389,
+              "name": "Cloak of the Cosmos"
+            },
+            {
+              "id": 18394,
+              "name": "Demon Howl Wristguards"
+            },
+            {
+              "id": 18372,
+              "name": "Blade of the New Moon"
+            },
+            {
+              "id": 18370,
+              "name": "Vigilance Charm"
+            }
+          ]
+        },
+        {
+          "name": "Lord Hel'nurath",
+          "npcID": 14506,
+          "loot": [
+            {
+              "id": 18755,
+              "name": "Xorothian Firestick"
+            },
+            {
+              "id": 18756,
+              "name": "Dreadguard's Protector"
+            },
+            {
+              "id": 18754,
+              "name": "Fel Hardened Bracers"
+            },
+            {
+              "id": 18757,
+              "name": "Diabolic Mantle"
+            }
+          ]
+        },
+        {
+          "name": "Prince Tortheldrin",
+          "npcID": 11486,
+          "loot": [
+            {
+              "id": 18382,
+              "name": "Fluctuating Cloak"
+            },
+            {
+              "id": 18395,
+              "name": "Emerald Flame Ring"
+            },
+            {
+              "id": 18380,
+              "name": "Eldritch Reinforced Legplates"
+            },
+            {
+              "id": 18378,
+              "name": "Silvermoon Leggings"
+            },
+            {
+              "id": 18396,
+              "name": "Mind Carver"
+            },
+            {
+              "id": 18392,
+              "name": "Distracting Dagger"
+            },
+            {
+              "id": 18376,
+              "name": "Timeworn Mace"
+            },
+            {
+              "id": 18375,
+              "name": "Bracers of the Eclipse"
+            },
+            {
+              "id": 18388,
+              "name": "Stoneshatter"
+            },
+            {
+              "id": 18373,
+              "name": "Chestplate of Tranquility"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 83726388,
+      "name": "Excavation Site: Wetlands",
+      "type": "Dungeon",
+      "level": "26-33",
+      "minLevel": 26,
+      "maxLevel": 33,
+      "location": "Wetlands",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1437,
+        "x": 0.477,
+        "y": 0.562
+      },
+      "bosses": [
+        {
+          "name": "Saltspine",
+          "npcID": 260322,
+          "loot": [
+            {
+              "id": 273024,
+              "name": "Glinteye Slippers"
+            },
+            {
+              "id": 273022,
+              "name": "Supple Bellyskin Leggings"
+            },
+            {
+              "id": 273023,
+              "name": "Saltscale Girdle"
+            }
+          ]
+        },
+        {
+          "name": "Shadetooth",
+          "npcID": 260325,
+          "loot": [
+            {
+              "id": 273025,
+              "name": "Raptorclaw Greaves"
+            },
+            {
+              "id": 273026,
+              "name": "Garb of Florid Feathers"
+            },
+            {
+              "id": 273027,
+              "name": "Raptor's Gaze"
+            },
+            {
+              "id": 273106,
+              "name": "Blueprint: Greenhouse"
+            }
+          ]
+        },
+        {
+          "name": "Relic Guardian",
+          "npcID": 260326,
+          "loot": [
+            {
+              "id": 273028,
+              "name": "Reliquary Mantle"
+            },
+            {
+              "id": 273029,
+              "name": "Golemsight Long Gun"
+            },
+            {
+              "id": 273030,
+              "name": "Ring of Power Regulation"
+            },
+            {
+              "id": 270866,
+              "name": "Titan Relic"
+            },
+            {
+              "id": 273097,
+              "name": "Blueprint: Rock Garden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 224836877,
+      "name": "Gnomeregan",
+      "type": "Dungeon",
+      "level": "29-38",
+      "minLevel": 29,
+      "maxLevel": 38,
+      "location": "Dun Morogh",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1426,
+        "x": 0.243,
+        "y": 0.398
+      },
+      "bosses": [
+        {
+          "name": "Grubbis",
+          "npcID": 7361,
+          "loot": [
+            {
+              "id": 9445,
+              "name": "Grubbis Paws"
+            },
+            {
+              "id": 274043,
+              "name": "Irradiated Shield"
+            },
+            {
+              "id": 274042,
+              "name": "Skullduggery Belt"
+            }
+          ]
+        },
+        {
+          "name": "Viscous Fallout",
+          "npcID": 7079,
+          "loot": [
+            {
+              "id": 9452,
+              "name": "Hydrocane"
+            },
+            {
+              "id": 9453,
+              "name": "Toxic Revenger"
+            },
+            {
+              "id": 9454,
+              "name": "Acidic Walkers"
+            }
+          ]
+        },
+        {
+          "name": "Electrocutioner 6000",
+          "npcID": 6235,
+          "loot": [
+            {
+              "id": 9446,
+              "name": "Electrocutioner Leg"
+            },
+            {
+              "id": 9447,
+              "name": "Electrocutioner Lagnut"
+            },
+            {
+              "id": 9448,
+              "name": "Spidertank Oilrag"
+            }
+          ]
+        },
+        {
+          "name": "Crowd Pummeler 9-60",
+          "npcID": 6229,
+          "loot": [
+            {
+              "id": 9449,
+              "name": "Manual Crowd Pummeler"
+            },
+            {
+              "id": 9450,
+              "name": "Gnomebot Operating Boots"
+            },
+            {
+              "id": 274068,
+              "name": "Thermaplugg Medal of Honor"
+            }
+          ]
+        },
+        {
+          "name": "Mekgineer Thermaplugg",
+          "npcID": 7800,
+          "loot": [
+            {
+              "id": 9458,
+              "name": "Thermaplugg's Central Core"
+            },
+            {
+              "id": 9459,
+              "name": "Thermaplugg's Left Arm"
+            },
+            {
+              "id": 9461,
+              "name": "Charged Gear"
+            },
+            {
+              "id": 9492,
+              "name": "Electromagnetic Gigaflux Reactivator"
+            }
+          ]
+        },
+        {
+          "name": "Dark Iron Ambassador",
+          "npcID": 6228,
+          "loot": [
+            {
+              "id": 9455,
+              "name": "Emissary Cuffs"
+            },
+            {
+              "id": 9456,
+              "name": "Glass Shooter"
+            },
+            {
+              "id": 9457,
+              "name": "Royal Diplomatic Scepter"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 9508,
+              "name": "Mechbuilder's Overalls"
+            },
+            {
+              "id": 9491,
+              "name": "Hotshot Pilot's Gloves"
+            },
+            {
+              "id": 9509,
+              "name": "Petrolspill Leggings"
+            },
+            {
+              "id": 9510,
+              "name": "Caverndeep Trudgers"
+            },
+            {
+              "id": 9487,
+              "name": "Hi-tech Supergun"
+            },
+            {
+              "id": 9485,
+              "name": "Vibroblade"
+            },
+            {
+              "id": 9488,
+              "name": "Oscillating Power Hammer"
+            },
+            {
+              "id": 9486,
+              "name": "Supercharger Battle Axe"
+            },
+            {
+              "id": 9490,
+              "name": "Gizmotron Megachopper"
+            },
+            {
+              "id": 9489,
+              "name": "Gyromatic Icemaker"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 91292217,
+      "name": "Hall of Thanes",
+      "type": "Dungeon",
+      "level": "13-20",
+      "minLevel": 13,
+      "maxLevel": 20,
+      "location": "Beneath Ironforge, Dun Morogh",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1455,
+        "x": 0.435,
+        "y": 0.52
+      },
+      "bosses": [
+        {
+          "name": "Faldrim Anvilmar",
+          "npcID": 261306,
+          "loot": [
+            {
+              "id": 270227,
+              "name": "Ephemeral Choker"
+            },
+            {
+              "id": 271096,
+              "name": "Aetherwisp Bracers"
+            },
+            {
+              "id": 271097,
+              "name": "Spiritwraith Drape"
+            }
+          ]
+        },
+        {
+          "name": "Magmatus",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 270230,
+              "name": "Kindlegem Girdle"
+            },
+            {
+              "id": 270231,
+              "name": "Flamefist Grips"
+            },
+            {
+              "id": 271095,
+              "name": "Fang of Magmatus"
+            }
+          ]
+        },
+        {
+          "name": "Plunder",
+          "npcID": 261311,
+          "loot": [
+            {
+              "id": 270228,
+              "name": "Golemheart Stave"
+            },
+            {
+              "id": 271098,
+              "name": "Golemguard Chest"
+            },
+            {
+              "id": 270229,
+              "name": "Treads of the Protector Golem"
+            }
+          ]
+        },
+        {
+          "name": "Durgen Dirgehammer",
+          "npcID": 261319,
+          "loot": [
+            {
+              "id": 270256,
+              "name": "Durgen's Crescent Axe"
+            },
+            {
+              "id": 270260,
+              "name": "Direhammer Leggings"
+            },
+            {
+              "id": 270261,
+              "name": "Robes of the Disgraced Thane"
+            },
+            {
+              "id": 274286,
+              "name": "Durgen Dirgehammer's Head"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 900000002,
+      "name": "Hyjal Summit",
+      "type": "Raid",
+      "level": "60",
+      "minLevel": 60,
+      "maxLevel": 60,
+      "location": "Mount Hyjal, near Nordrassil",
+      "size": 20,
+      "bossCount": 13,
+      "bosses": [],
+      "source": "https://news.blizzard.com/en-gb/article/24303009/world-of-warcraft-forever-raid-overviewlocations-raid-sizes-and-attunement",
+      "status": "Announced opening: 2026-12-09; availability must be checked against the current game."
+    },
+    {
+      "id": 227644164,
+      "name": "Krol'dok Stronghold",
+      "type": "Dungeon",
+      "level": "40-45",
+      "minLevel": 40,
+      "maxLevel": 45,
+      "location": "Riverglades",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": null,
+      "bosses": [
+        {
+          "name": "Slavecrusher Grox",
+          "npcID": 258966,
+          "loot": [
+            {
+              "id": 274996,
+              "name": "Resistance Breaker Spaulder"
+            },
+            {
+              "id": 274997,
+              "name": "Chain of Binding"
+            },
+            {
+              "id": 274995,
+              "name": "Slavecrusher Scepter"
+            }
+          ]
+        },
+        {
+          "name": "Twilight Commander Zarmok",
+          "npcID": 258972,
+          "loot": [
+            {
+              "id": 275000,
+              "name": "Zarmok's Plated Signet"
+            },
+            {
+              "id": 274998,
+              "name": "Shadowlight Athame"
+            }
+          ]
+        },
+        {
+          "name": "War Handler Ashka",
+          "npcID": 259281,
+          "loot": [
+            {
+              "id": 275001,
+              "name": "Bloodied Gutslicer"
+            }
+          ]
+        },
+        {
+          "name": "Nar'gurk",
+          "npcID": 258964,
+          "loot": [
+            {
+              "id": 275004,
+              "name": "Chain of the Corruptor"
+            },
+            {
+              "id": 275005,
+              "name": "Krol'dok Warplate Chest"
+            }
+          ]
+        },
+        {
+          "name": "Bossman Toof",
+          "npcID": 264773,
+          "loot": [
+            {
+              "id": 286430,
+              "name": "Toofbreaker"
+            },
+            {
+              "id": 286429,
+              "name": "Big-Belly Belt"
+            }
+          ]
+        },
+        {
+          "name": "Overlord Mugg",
+          "npcID": 258968,
+          "loot": [
+            {
+              "id": 275009,
+              "name": "Emblem of Slamming"
+            },
+            {
+              "id": 275007,
+              "name": "Mugg's Jabber"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": []
+        }
+      ]
+    },
+    {
+      "id": 186054639,
+      "name": "Lower Blackrock Spire",
+      "type": "Dungeon",
+      "level": "55-60",
+      "minLevel": 55,
+      "maxLevel": 60,
+      "location": "Blackrock Mountain",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1427,
+        "x": 0.348,
+        "y": 0.84
+      },
+      "bosses": [
+        {
+          "name": "Spirestone Butcher",
+          "npcID": 9219,
+          "loot": [
+            {
+              "id": 12608,
+              "name": "Butcher's Apron"
+            },
+            {
+              "id": 13286,
+              "name": "Rivenspike"
+            }
+          ]
+        },
+        {
+          "name": "Spirestone Battle Lord",
+          "npcID": 9218,
+          "loot": [
+            {
+              "id": 13284,
+              "name": "Swiftdart Battleboots"
+            },
+            {
+              "id": 13285,
+              "name": "The Blackrock Slicer"
+            }
+          ]
+        },
+        {
+          "name": "Spirestone Lord Magus",
+          "npcID": 9217,
+          "loot": [
+            {
+              "id": 13283,
+              "name": "Magus Ring"
+            },
+            {
+              "id": 13282,
+              "name": "Ogreseer Tower Boots"
+            },
+            {
+              "id": 13261,
+              "name": "Globe of D'sak"
+            }
+          ]
+        },
+        {
+          "name": "Highlord Omokk",
+          "npcID": 9196,
+          "loot": [
+            {
+              "id": 12336,
+              "name": "Gemstone of Spirestone"
+            },
+            {
+              "id": 13166,
+              "name": "Slamshot Shoulders"
+            },
+            {
+              "id": 13167,
+              "name": "Fist of Omokk"
+            },
+            {
+              "id": 13168,
+              "name": "Plate of the Shaman King"
+            },
+            {
+              "id": 13169,
+              "name": "Tressermane Leggings"
+            },
+            {
+              "id": 13170,
+              "name": "Skyshroud Leggings"
+            },
+            {
+              "id": 16670,
+              "name": "Boots of Elements"
+            }
+          ]
+        },
+        {
+          "name": "Shadow Hunter Vosh'gajin",
+          "npcID": 9236,
+          "loot": [
+            {
+              "id": 13255,
+              "name": "Trueaim Gauntlets"
+            },
+            {
+              "id": 12626,
+              "name": "Funeral Cuffs"
+            },
+            {
+              "id": 16712,
+              "name": "Shadowcraft Gloves"
+            },
+            {
+              "id": 13257,
+              "name": "Demonic Runed Spaulders"
+            },
+            {
+              "id": 12651,
+              "name": "Blackcrow"
+            },
+            {
+              "id": 12653,
+              "name": "Riphook"
+            },
+            {
+              "id": 12654,
+              "name": "Doomshot"
+            }
+          ]
+        },
+        {
+          "name": "War Master Voone",
+          "npcID": 9237,
+          "loot": [
+            {
+              "id": 12335,
+              "name": "Gemstone of Smolderthorn"
+            },
+            {
+              "id": 13177,
+              "name": "Talisman of Evasion"
+            },
+            {
+              "id": 13179,
+              "name": "Brazecore Armguards"
+            },
+            {
+              "id": 16676,
+              "name": "Beaststalker's Gloves"
+            },
+            {
+              "id": 12582,
+              "name": "Keris of Zul'Serak"
+            },
+            {
+              "id": 22231,
+              "name": "Kayser's Boots of Precision"
+            },
+            {
+              "id": 13173,
+              "name": "Flightblade Throwing Axe"
+            }
+          ]
+        },
+        {
+          "name": "Mother Smolderweb",
+          "npcID": 10596,
+          "loot": [
+            {
+              "id": 13244,
+              "name": "Gilded Gauntlets"
+            },
+            {
+              "id": 16715,
+              "name": "Wildheart Boots"
+            },
+            {
+              "id": 13213,
+              "name": "Smolderweb's Eye"
+            },
+            {
+              "id": 13183,
+              "name": "Venomspitter"
+            }
+          ]
+        },
+        {
+          "name": "Crystal Fang",
+          "npcID": 10376,
+          "loot": [
+            {
+              "id": 13185,
+              "name": "Sunderseer Mantle"
+            },
+            {
+              "id": 13184,
+              "name": "Fallbrush Handgrips"
+            },
+            {
+              "id": 13218,
+              "name": "Fang of the Crystal Spider"
+            }
+          ]
+        },
+        {
+          "name": "Urok Doomhowl",
+          "npcID": 10584,
+          "loot": [
+            {
+              "id": 13258,
+              "name": "Slaghide Gauntlets"
+            },
+            {
+              "id": 13259,
+              "name": "Ribsteel Footguards"
+            },
+            {
+              "id": 22232,
+              "name": "Marksman's Girdle"
+            },
+            {
+              "id": 13178,
+              "name": "Rosewine Circle"
+            },
+            {
+              "id": 13053,
+              "name": "Doombringer"
+            }
+          ]
+        },
+        {
+          "name": "Bannok Grimaxe",
+          "npcID": 9596,
+          "loot": [
+            {
+              "id": 12634,
+              "name": "Chiselbrand Girdle"
+            },
+            {
+              "id": 12637,
+              "name": "Backusarian Gauntlets"
+            },
+            {
+              "id": 12621,
+              "name": "Demonfork"
+            },
+            {
+              "id": 12838,
+              "name": "Plans: Arcanite Reaper"
+            }
+          ]
+        },
+        {
+          "name": "Quartermaster Zigris",
+          "npcID": 9736,
+          "loot": [
+            {
+              "id": 13252,
+              "name": "Cloudrunner Girdle"
+            },
+            {
+              "id": 13253,
+              "name": "Hands of Power"
+            },
+            {
+              "id": 12835,
+              "name": "Plans: Annihilator"
+            }
+          ]
+        },
+        {
+          "name": "Halycon",
+          "npcID": 10220,
+          "loot": [
+            {
+              "id": 13212,
+              "name": "Halycon's Spiked Collar"
+            },
+            {
+              "id": 13211,
+              "name": "Slashclaw Bracers"
+            },
+            {
+              "id": 13210,
+              "name": "Pads of the Dread Wolf"
+            },
+            {
+              "id": 22313,
+              "name": "Ironweave Bracers"
+            }
+          ]
+        },
+        {
+          "name": "Gizrul the Slavener",
+          "npcID": 10268,
+          "loot": [
+            {
+              "id": 13206,
+              "name": "Wolfshear Leggings"
+            },
+            {
+              "id": 13205,
+              "name": "Rhombeard Protector"
+            },
+            {
+              "id": 13208,
+              "name": "Bleak Howler Armguards"
+            },
+            {
+              "id": 16718,
+              "name": "Wildheart Spaulders"
+            }
+          ]
+        },
+        {
+          "name": "Ghok Bashguud",
+          "npcID": 9718,
+          "loot": [
+            {
+              "id": 13203,
+              "name": "Armswake Cloak"
+            },
+            {
+              "id": 13204,
+              "name": "Bashguuder"
+            },
+            {
+              "id": 13198,
+              "name": "Hurd Smasher"
+            }
+          ]
+        },
+        {
+          "name": "Overlord Wyrmthalak",
+          "npcID": 9568,
+          "loot": [
+            {
+              "id": 12337,
+              "name": "Gemstone of Bloodaxe"
+            },
+            {
+              "id": 13161,
+              "name": "Trindlehaven Staff"
+            },
+            {
+              "id": 13162,
+              "name": "Reiver Claws"
+            },
+            {
+              "id": 13163,
+              "name": "Relentless Scythe"
+            },
+            {
+              "id": 13164,
+              "name": "Heart of the Scale"
+            },
+            {
+              "id": 16679,
+              "name": "Beaststalker's Mantle"
+            },
+            {
+              "id": 22321,
+              "name": "Heart of Wyrmthalak"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 231348,
+      "name": "Maraudon",
+      "type": "Dungeon",
+      "level": "45-52",
+      "minLevel": 45,
+      "maxLevel": 52,
+      "location": "Desolace",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1443,
+        "x": 0.291,
+        "y": 0.625
+      },
+      "bosses": [
+        {
+          "name": "Noxxion",
+          "npcID": 13282,
+          "loot": [
+            {
+              "id": 17744,
+              "name": "Heart of Noxxion"
+            },
+            {
+              "id": 17746,
+              "name": "Noxxion's Shackles"
+            },
+            {
+              "id": 17745,
+              "name": "Noxious Shooter"
+            }
+          ]
+        },
+        {
+          "name": "Razorlash",
+          "npcID": 12258,
+          "loot": [
+            {
+              "id": 17748,
+              "name": "Vinerot Sandals"
+            },
+            {
+              "id": 17749,
+              "name": "Phytoskin Spaulders"
+            }
+          ]
+        },
+        {
+          "name": "Lord Vyletongue",
+          "npcID": 12236,
+          "loot": [
+            {
+              "id": 17752,
+              "name": "Satyr's Lash"
+            },
+            {
+              "id": 17754,
+              "name": "Infernal Trickster Leggings"
+            },
+            {
+              "id": 17755,
+              "name": "Satyrmane Sash"
+            }
+          ]
+        },
+        {
+          "name": "Meshlok the Harvester",
+          "npcID": 12237,
+          "loot": [
+            {
+              "id": 17767,
+              "name": "Bloomsprout Headpiece"
+            },
+            {
+              "id": 17741,
+              "name": "Nature's Embrace"
+            },
+            {
+              "id": 17742,
+              "name": "Fungus Shroud Armor"
+            }
+          ]
+        },
+        {
+          "name": "Celebras the Cursed",
+          "npcID": 12225,
+          "loot": [
+            {
+              "id": 17738,
+              "name": "Claw of Celebras"
+            },
+            {
+              "id": 17739,
+              "name": "Grovekeeper's Drape"
+            },
+            {
+              "id": 17740,
+              "name": "Soothsayer's Headdress"
+            }
+          ]
+        },
+        {
+          "name": "Landslide",
+          "npcID": 12203,
+          "loot": [
+            {
+              "id": 17943,
+              "name": "Fist of Stone"
+            },
+            {
+              "id": 17736,
+              "name": "Rockgrip Gauntlets"
+            },
+            {
+              "id": 17737,
+              "name": "Cloud Stone"
+            },
+            {
+              "id": 17734,
+              "name": "Helm of the Mountain"
+            }
+          ]
+        },
+        {
+          "name": "Tinkerer Gizlock",
+          "npcID": 13601,
+          "loot": [
+            {
+              "id": 17717,
+              "name": "Megashot Rifle"
+            },
+            {
+              "id": 17718,
+              "name": "Gizlock's Hypertech Buckler"
+            },
+            {
+              "id": 17719,
+              "name": "Inventor's Focal Sword"
+            }
+          ]
+        },
+        {
+          "name": "Rotgrip",
+          "npcID": 13596,
+          "loot": [
+            {
+              "id": 17732,
+              "name": "Rotgrip Mantle"
+            },
+            {
+              "id": 17728,
+              "name": "Albino Crocscale Boots"
+            },
+            {
+              "id": 17730,
+              "name": "Gatorbite Axe"
+            }
+          ]
+        },
+        {
+          "name": "Princess Theradras",
+          "npcID": 12201,
+          "loot": [
+            {
+              "id": 17713,
+              "name": "Blackstone Ring"
+            },
+            {
+              "id": 17714,
+              "name": "Bracers of the Stone Princess"
+            },
+            {
+              "id": 17707,
+              "name": "Gemshard Heart"
+            },
+            {
+              "id": 17715,
+              "name": "Eye of Theradras"
+            },
+            {
+              "id": 17766,
+              "name": "Princess Theradras' Scepter"
+            },
+            {
+              "id": 17710,
+              "name": "Charstone Dirk"
+            },
+            {
+              "id": 17711,
+              "name": "Elemental Rockridge Leggings"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 900000003,
+      "name": "Onyxia's Lair",
+      "type": "Raid",
+      "level": "60",
+      "minLevel": 60,
+      "maxLevel": 60,
+      "location": "Dustwallow Marsh",
+      "size": 40,
+      "bossCount": 1,
+      "bosses": [],
+      "source": "https://news.blizzard.com/en-gb/article/24303009/world-of-warcraft-forever-raid-overviewlocations-raid-sizes-and-attunement",
+      "status": "Announced opening: 2026-12-09; availability must be checked against the current game."
+    },
+    {
+      "id": 42982982,
+      "name": "Ragefire Chasm",
+      "type": "Dungeon",
+      "level": "13-18",
+      "minLevel": 13,
+      "maxLevel": 18,
+      "location": "Cleft of Shadow, Orgrimmar",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1454,
+        "x": 0.526,
+        "y": 0.49
+      },
+      "bosses": [
+        {
+          "name": "Oggleflint",
+          "npcID": 11517,
+          "loot": [
+            {
+              "id": 272999,
+              "name": "Barbaric Crossbow"
+            },
+            {
+              "id": 272996,
+              "name": "Trogg Scepter"
+            },
+            {
+              "id": 272998,
+              "name": "Bone Knuckles"
+            },
+            {
+              "id": 252781,
+              "name": "Pattern: Stormrider's Leather Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Taragaman the Hungerer",
+          "npcID": 11520,
+          "loot": [
+            {
+              "id": 14149,
+              "name": "Subterranean Cape"
+            },
+            {
+              "id": 14148,
+              "name": "Crystalline Cuffs"
+            },
+            {
+              "id": 14145,
+              "name": "Cursed Felblade"
+            },
+            {
+              "id": 251361,
+              "name": "Plans: Guard's Gloves"
+            },
+            {
+              "id": 251362,
+              "name": "Plans: Protector's Gloves"
+            },
+            {
+              "id": 251363,
+              "name": "Plans: Acolyte's Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Jergosh the Invoker",
+          "npcID": 11518,
+          "loot": [
+            {
+              "id": 14150,
+              "name": "Robe of Evocation"
+            },
+            {
+              "id": 14147,
+              "name": "Cavedweller Bracers"
+            },
+            {
+              "id": 14151,
+              "name": "Chanting Blade"
+            },
+            {
+              "id": 251360,
+              "name": "Plans: Veteran's Gloves"
+            },
+            {
+              "id": 253906,
+              "name": "Pattern: Filigreed Flame Gown"
+            }
+          ]
+        },
+        {
+          "name": "Bazzalan",
+          "npcID": 11519,
+          "loot": [
+            {
+              "id": 273003,
+              "name": "Searing Dagger"
+            },
+            {
+              "id": 273007,
+              "name": "Chasm Walkers"
+            },
+            {
+              "id": 273005,
+              "name": "Satyrskin Cloak"
+            },
+            {
+              "id": 252780,
+              "name": "Pattern: Totemic Leather Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            },
+            {
+              "id": 253908,
+              "name": "Pattern: Filigreed Shadow Gown"
+            },
+            {
+              "id": 253910,
+              "name": "Pattern: Filigreed Pearly Gown"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 53430179,
+      "name": "Razorfen Downs",
+      "type": "Dungeon",
+      "level": "37-46",
+      "minLevel": 37,
+      "maxLevel": 46,
+      "location": "The Barrens",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1413,
+        "x": 0.5,
+        "y": 0.92
+      },
+      "bosses": [
+        {
+          "name": "Tuten'kash",
+          "npcID": 7355,
+          "loot": [
+            {
+              "id": 10776,
+              "name": "Silky Spider Cape"
+            },
+            {
+              "id": 10775,
+              "name": "Carapace of Tuten'kash"
+            },
+            {
+              "id": 10777,
+              "name": "Arachnid Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Mordresh Fire Eye",
+          "npcID": 7357,
+          "loot": [
+            {
+              "id": 10770,
+              "name": "Mordresh's Lifeless Skull"
+            },
+            {
+              "id": 10769,
+              "name": "Glowing Eye of Mordresh"
+            },
+            {
+              "id": 10771,
+              "name": "Deathmage Sash"
+            }
+          ]
+        },
+        {
+          "name": "Glutton",
+          "npcID": 8567,
+          "loot": [
+            {
+              "id": 10772,
+              "name": "Glutton's Cleaver"
+            },
+            {
+              "id": 10774,
+              "name": "Fleshhide Shoulders"
+            }
+          ]
+        },
+        {
+          "name": "Ragglesnout",
+          "npcID": 7354,
+          "loot": []
+        },
+        {
+          "name": "Plaguemaw the Rotting",
+          "npcID": 7356,
+          "loot": []
+        },
+        {
+          "name": "Amnennar the Coldbringer",
+          "npcID": 7358,
+          "loot": [
+            {
+              "id": 10762,
+              "name": "Robes of the Lich"
+            },
+            {
+              "id": 10763,
+              "name": "Icemetal Barbute"
+            },
+            {
+              "id": 10764,
+              "name": "Deathchill Armor"
+            },
+            {
+              "id": 10765,
+              "name": "Bonefingers"
+            },
+            {
+              "id": 10761,
+              "name": "Coldrage Dagger"
+            },
+            {
+              "id": 274381,
+              "name": "Coldbringer Spine"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 56760248,
+      "name": "Razorfen Kraul",
+      "type": "Dungeon",
+      "level": "29-38",
+      "minLevel": 29,
+      "maxLevel": 38,
+      "location": "The Barrens",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1413,
+        "x": 0.429,
+        "y": 0.902
+      },
+      "bosses": [
+        {
+          "name": "Roogug",
+          "npcID": 6168,
+          "loot": [
+            {
+              "id": 274155,
+              "name": "Geomancer Headdress"
+            },
+            {
+              "id": 274149,
+              "name": "Thornweaver Drape"
+            },
+            {
+              "id": 274152,
+              "name": "Roogug's Severed Head"
+            }
+          ]
+        },
+        {
+          "name": "Aggem Thorncurse",
+          "npcID": 4424,
+          "loot": [
+            {
+              "id": 6681,
+              "name": "Thornspike"
+            },
+            {
+              "id": 274158,
+              "name": "Death Prophet Spine"
+            },
+            {
+              "id": 274159,
+              "name": "Thorncursed Grips"
+            },
+            {
+              "id": 252820,
+              "name": "Pattern: Brawler's Leather Legguards"
+            }
+          ]
+        },
+        {
+          "name": "Death Speaker Jargba",
+          "npcID": 4428,
+          "loot": [
+            {
+              "id": 2816,
+              "name": "Death Speaker Scepter"
+            },
+            {
+              "id": 6685,
+              "name": "Death Speaker Mantle"
+            },
+            {
+              "id": 6682,
+              "name": "Death Speaker Robes"
+            }
+          ]
+        },
+        {
+          "name": "Overlord Ramtusk",
+          "npcID": 4420,
+          "loot": [
+            {
+              "id": 6687,
+              "name": "Corpsemaker"
+            },
+            {
+              "id": 6686,
+              "name": "Tusken Helm"
+            },
+            {
+              "id": 274161,
+              "name": "Quillord Mail Leggings"
+            },
+            {
+              "id": 251379,
+              "name": "Plans: Crusader's Silvered Chain Leggings"
+            },
+            {
+              "id": 252821,
+              "name": "Pattern: Trapper's Leather Legguards"
+            }
+          ]
+        },
+        {
+          "name": "Agathelos the Raging",
+          "npcID": 4422,
+          "loot": [
+            {
+              "id": 6691,
+              "name": "Swinetusk Shank"
+            },
+            {
+              "id": 6690,
+              "name": "Ferine Leggings"
+            },
+            {
+              "id": 274160,
+              "name": "Quilrager Throwing Axe"
+            },
+            {
+              "id": 251378,
+              "name": "Plans: Acolyte's Silvered Chain Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Charlga Razorflank",
+          "npcID": 4421,
+          "loot": [
+            {
+              "id": 6693,
+              "name": "Agamaggan's Clutch"
+            },
+            {
+              "id": 6694,
+              "name": "Heart of Agamaggan"
+            },
+            {
+              "id": 6692,
+              "name": "Pronged Reaver"
+            },
+            {
+              "id": 273103,
+              "name": "Blueprint: Arcane Salvager"
+            },
+            {
+              "id": 17008,
+              "name": "Small Scroll"
+            }
+          ]
+        },
+        {
+          "name": "Blind Hunter",
+          "npcID": 4425,
+          "loot": [
+            {
+              "id": 6695,
+              "name": "Stygian Bone Amulet"
+            },
+            {
+              "id": 6697,
+              "name": "Batwing Mantle"
+            },
+            {
+              "id": 6696,
+              "name": "Nightstalker Bow"
+            }
+          ]
+        },
+        {
+          "name": "Earthcaller Halmgar",
+          "npcID": 4842,
+          "loot": [
+            {
+              "id": 6689,
+              "name": "Wind Spirit Staff"
+            },
+            {
+              "id": 6688,
+              "name": "Whisperwind Headdress"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 776,
+              "name": "Vendetta"
+            },
+            {
+              "id": 1727,
+              "name": "Sword of Decay"
+            },
+            {
+              "id": 1975,
+              "name": "Pysan's Old Greatsword"
+            },
+            {
+              "id": 1976,
+              "name": "Slaghammer"
+            },
+            {
+              "id": 2549,
+              "name": "Staff of the Shade"
+            },
+            {
+              "id": 1978,
+              "name": "Wolfclaw Gloves"
+            },
+            {
+              "id": 2264,
+              "name": "Mantle of Thieves"
+            },
+            {
+              "id": 4438,
+              "name": "Pugilist Bracers"
+            },
+            {
+              "id": 2039,
+              "name": "Plains Ring"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 123202917,
+      "name": "Ruins of Lordaeron",
+      "type": "Dungeon",
+      "level": "15-22",
+      "minLevel": 15,
+      "maxLevel": 22,
+      "location": "The ruined city of Lordaeron",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1420,
+        "x": 0.634,
+        "y": 0.674
+      },
+      "bosses": [
+        {
+          "name": "The Baron",
+          "npcID": 250660,
+          "loot": [
+            {
+              "id": 271204,
+              "name": "Meathook Slicer"
+            },
+            {
+              "id": 271205,
+              "name": "Abomination Bones"
+            },
+            {
+              "id": 271206,
+              "name": "Leftover Abomination Skin"
+            }
+          ]
+        },
+        {
+          "name": "Witherfang",
+          "npcID": 250483,
+          "loot": [
+            {
+              "id": 271201,
+              "name": "Atrophic Girdle"
+            },
+            {
+              "id": 271202,
+              "name": "Witherbite Bracers"
+            },
+            {
+              "id": 271203,
+              "name": "Segmented Spider Leg"
+            }
+          ]
+        },
+        {
+          "name": "The Abandoned",
+          "npcID": 250631,
+          "loot": [
+            {
+              "id": 271207,
+              "name": "Rotmender's Leggings"
+            },
+            {
+              "id": 271208,
+              "name": "Grip of Fear"
+            },
+            {
+              "id": 271216,
+              "name": "Scepter of the Abandoned"
+            }
+          ]
+        },
+        {
+          "name": "Bjork",
+          "npcID": 256097,
+          "loot": [
+            {
+              "id": 271209,
+              "name": "Bonerust Leggings"
+            },
+            {
+              "id": 271210,
+              "name": "Tuskwrap Belt"
+            },
+            {
+              "id": 271217,
+              "name": "Corpse Chopper"
+            }
+          ]
+        },
+        {
+          "name": "Rath'mael",
+          "npcID": 250657,
+          "loot": [
+            {
+              "id": 271213,
+              "name": "Mirror of Rath'mael"
+            },
+            {
+              "id": 271214,
+              "name": "Rotmender's Treads"
+            },
+            {
+              "id": 271215,
+              "name": "Coldspire Staff"
+            },
+            {
+              "id": 273085,
+              "name": "Blueprint: Fermenter"
+            },
+            {
+              "id": 273103,
+              "name": "Blueprint: Arcane Salvager"
+            }
+          ]
+        },
+        {
+          "name": "Viktor the Vile",
+          "npcID": 256035,
+          "loot": [
+            {
+              "id": 271211,
+              "name": "Vilewalkers"
+            },
+            {
+              "id": 271212,
+              "name": "Bloodied Chestwraps"
+            },
+            {
+              "id": 271218,
+              "name": "Vileblood Scimitar"
+            }
+          ]
+        },
+        {
+          "name": "Lordaeron Captain",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 6641,
+              "name": "Haunting Blade"
+            },
+            {
+              "id": 6642,
+              "name": "Phantom Armor"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 286981,
+              "name": "Death Bindings"
+            },
+            {
+              "id": 286977,
+              "name": "Sword of the Fallen"
+            },
+            {
+              "id": 286978,
+              "name": "Rotmender's Garb"
+            },
+            {
+              "id": 286979,
+              "name": "Rotmender's Gloves"
+            },
+            {
+              "id": 286980,
+              "name": "Rotmender's Sash"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 13453454,
+      "name": "Scarlet Monastery: Armory",
+      "type": "Dungeon",
+      "level": "34-42",
+      "minLevel": 34,
+      "maxLevel": 42,
+      "location": "Tirisfal Glades",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1420,
+        "x": 0.826,
+        "y": 0.338
+      },
+      "bosses": [
+        {
+          "name": "Herod",
+          "npcID": 3975,
+          "loot": [
+            {
+              "id": 7718,
+              "name": "Herod's Shoulder"
+            },
+            {
+              "id": 7719,
+              "name": "Raging Berserker's Helm"
+            },
+            {
+              "id": 7717,
+              "name": "Ravager"
+            },
+            {
+              "id": 10330,
+              "name": "Scarlet Leggings"
+            },
+            {
+              "id": 274295,
+              "name": "Band of Crimson Light"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10329,
+              "name": "Scarlet Belt"
+            },
+            {
+              "id": 10332,
+              "name": "Scarlet Boots"
+            },
+            {
+              "id": 5819,
+              "name": "Sunblaze Coif"
+            },
+            {
+              "id": 7730,
+              "name": "Cobalt Crusher"
+            },
+            {
+              "id": 7757,
+              "name": "Windweaver Staff"
+            },
+            {
+              "id": 7761,
+              "name": "Steelclaw Reaver"
+            },
+            {
+              "id": 7787,
+              "name": "Resplendent Guardian"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 84886531,
+      "name": "Scarlet Monastery: Cathedral",
+      "type": "Dungeon",
+      "level": "36-45",
+      "minLevel": 36,
+      "maxLevel": 45,
+      "location": "Tirisfal Glades",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1420,
+        "x": 0.826,
+        "y": 0.338
+      },
+      "bosses": [
+        {
+          "name": "High Inquisitor Fairbanks",
+          "npcID": 4542,
+          "loot": [
+            {
+              "id": 19507,
+              "name": "Inquisitor's Shawl"
+            },
+            {
+              "id": 19508,
+              "name": "Branded Leather Bracers"
+            },
+            {
+              "id": 19509,
+              "name": "Dusty Mail Boots"
+            }
+          ]
+        },
+        {
+          "name": "Scarlet Commander Mograine",
+          "npcID": 3976,
+          "loot": [
+            {
+              "id": 7726,
+              "name": "Aegis of the Scarlet Commander"
+            },
+            {
+              "id": 7724,
+              "name": "Gauntlets of Divinity"
+            },
+            {
+              "id": 7723,
+              "name": "Mograine's Might"
+            },
+            {
+              "id": 10330,
+              "name": "Scarlet Leggings"
+            }
+          ]
+        },
+        {
+          "name": "High Inquisitor Whitemane",
+          "npcID": 3977,
+          "loot": [
+            {
+              "id": 7722,
+              "name": "Triune Amulet"
+            },
+            {
+              "id": 7720,
+              "name": "Whitemane's Chapeau"
+            },
+            {
+              "id": 7721,
+              "name": "Hand of Righteousness"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10328,
+              "name": "Scarlet Chestpiece"
+            },
+            {
+              "id": 10331,
+              "name": "Scarlet Gauntlets"
+            },
+            {
+              "id": 10332,
+              "name": "Scarlet Boots"
+            },
+            {
+              "id": 5819,
+              "name": "Sunblaze Coif"
+            },
+            {
+              "id": 7730,
+              "name": "Cobalt Crusher"
+            },
+            {
+              "id": 7757,
+              "name": "Windweaver Staff"
+            },
+            {
+              "id": 7761,
+              "name": "Steelclaw Reaver"
+            },
+            {
+              "id": 7787,
+              "name": "Resplendent Guardian"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 100687747,
+      "name": "Scarlet Monastery: Graveyard",
+      "type": "Dungeon",
+      "level": "30-38",
+      "minLevel": 30,
+      "maxLevel": 38,
+      "location": "Tirisfal Glades",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1420,
+        "x": 0.826,
+        "y": 0.338
+      },
+      "bosses": [
+        {
+          "name": "Interrogator Vishas",
+          "npcID": 3983,
+          "loot": [
+            {
+              "id": 7682,
+              "name": "Torturing Poker"
+            },
+            {
+              "id": 7683,
+              "name": "Bloody Brass Knuckles"
+            },
+            {
+              "id": 274290,
+              "name": "Painwalker Buckler"
+            },
+            {
+              "id": 252513,
+              "name": "Trapper's Leather Helm"
+            }
+          ]
+        },
+        {
+          "name": "Azshir the Sleepless",
+          "npcID": 6490,
+          "loot": [
+            {
+              "id": 7709,
+              "name": "Blighted Leggings"
+            },
+            {
+              "id": 7708,
+              "name": "Necrotic Wand"
+            },
+            {
+              "id": 7731,
+              "name": "Ghostshard Talisman"
+            }
+          ]
+        },
+        {
+          "name": "Fallen Champion",
+          "npcID": 6488,
+          "loot": [
+            {
+              "id": 7691,
+              "name": "Embalmed Shroud"
+            },
+            {
+              "id": 7690,
+              "name": "Ebon Vise"
+            },
+            {
+              "id": 7689,
+              "name": "Morbid Dawn"
+            },
+            {
+              "id": 252513,
+              "name": "Trapper's Leather Helm"
+            }
+          ]
+        },
+        {
+          "name": "Ironspine",
+          "npcID": 6489,
+          "loot": [
+            {
+              "id": 7688,
+              "name": "Ironspine's Ribcage"
+            },
+            {
+              "id": 7687,
+              "name": "Ironspine's Fist"
+            },
+            {
+              "id": 7686,
+              "name": "Ironspine's Eye"
+            }
+          ]
+        },
+        {
+          "name": "Bloodmage Thalnos",
+          "npcID": 4543,
+          "loot": [
+            {
+              "id": 7685,
+              "name": "Orb of the Forgotten Seer"
+            },
+            {
+              "id": 7684,
+              "name": "Bloodmage Mantle"
+            },
+            {
+              "id": 274291,
+              "name": "Polished Skullcap"
+            },
+            {
+              "id": 252822,
+              "name": "Pattern: Defender's Leather Kilt"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10333,
+              "name": "Scarlet Wristguards"
+            },
+            {
+              "id": 10332,
+              "name": "Scarlet Boots"
+            },
+            {
+              "id": 5819,
+              "name": "Sunblaze Coif"
+            },
+            {
+              "id": 7730,
+              "name": "Cobalt Crusher"
+            },
+            {
+              "id": 7761,
+              "name": "Steelclaw Reaver"
+            },
+            {
+              "id": 7787,
+              "name": "Resplendent Guardian"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 201823953,
+      "name": "Scarlet Monastery: Library",
+      "type": "Dungeon",
+      "level": "33-41",
+      "minLevel": 33,
+      "maxLevel": 41,
+      "location": "Tirisfal Glades",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1420,
+        "x": 0.826,
+        "y": 0.338
+      },
+      "bosses": [
+        {
+          "name": "Houndmaster Loksey",
+          "npcID": 3974,
+          "loot": [
+            {
+              "id": 7756,
+              "name": "Dog Training Gloves"
+            },
+            {
+              "id": 3456,
+              "name": "Dog Whistle"
+            },
+            {
+              "id": 7710,
+              "name": "Loksey's Training Stick"
+            },
+            {
+              "id": 274292,
+              "name": "Houndmaster Boomerang"
+            }
+          ]
+        },
+        {
+          "name": "Arcanist Doan",
+          "npcID": 6487,
+          "loot": [
+            {
+              "id": 7714,
+              "name": "Hypnotic Blade"
+            },
+            {
+              "id": 7713,
+              "name": "Illusionary Rod"
+            },
+            {
+              "id": 274293,
+              "name": "Spellsever Crossbow"
+            },
+            {
+              "id": 7712,
+              "name": "Mantle of Doan"
+            },
+            {
+              "id": 7711,
+              "name": "Robe of Doan"
+            },
+            {
+              "id": 274294,
+              "name": "Library Walkers"
+            },
+            {
+              "id": 7146,
+              "name": "The Scarlet Key"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10332,
+              "name": "Scarlet Boots"
+            },
+            {
+              "id": 5819,
+              "name": "Sunblaze Coif"
+            },
+            {
+              "id": 7730,
+              "name": "Cobalt Crusher"
+            },
+            {
+              "id": 7757,
+              "name": "Windweaver Staff"
+            },
+            {
+              "id": 7761,
+              "name": "Steelclaw Reaver"
+            },
+            {
+              "id": 7787,
+              "name": "Resplendent Guardian"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 61489963,
+      "name": "Scholomance",
+      "type": "Dungeon",
+      "level": "58-60",
+      "minLevel": 58,
+      "maxLevel": 60,
+      "location": "Western Plaguelands",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1422,
+        "x": 0.697,
+        "y": 0.732
+      },
+      "bosses": [
+        {
+          "name": "Kirtonos the Herald",
+          "npcID": 10506,
+          "loot": [
+            {
+              "id": 13960,
+              "name": "Heart of the Fiend"
+            },
+            {
+              "id": 13967,
+              "name": "Windreaver Greaves"
+            },
+            {
+              "id": 13969,
+              "name": "Loomguard Armbraces"
+            },
+            {
+              "id": 14024,
+              "name": "Frightalon"
+            },
+            {
+              "id": 13957,
+              "name": "Gargoyle Slashers"
+            },
+            {
+              "id": 16734,
+              "name": "Boots of Valor"
+            }
+          ]
+        },
+        {
+          "name": "Jandice Barov",
+          "npcID": 10503,
+          "loot": [
+            {
+              "id": 16701,
+              "name": "Dreadmist Mantle"
+            },
+            {
+              "id": 14545,
+              "name": "Ghostloom Leggings"
+            },
+            {
+              "id": 14541,
+              "name": "Barovian Family Sword"
+            },
+            {
+              "id": 14548,
+              "name": "Royal Cap Spaulders"
+            },
+            {
+              "id": 18690,
+              "name": "Wraithplate Leggings"
+            },
+            {
+              "id": 18689,
+              "name": "Phantasmal Cloak"
+            },
+            {
+              "id": 22394,
+              "name": "Staff of Metanoia"
+            }
+          ]
+        },
+        {
+          "name": "Rattlegore",
+          "npcID": 11622,
+          "loot": [
+            {
+              "id": 16711,
+              "name": "Shadowcraft Boots"
+            },
+            {
+              "id": 14528,
+              "name": "Rattlecage Buckler"
+            },
+            {
+              "id": 14531,
+              "name": "Frightskull Shaft"
+            },
+            {
+              "id": 14537,
+              "name": "Corpselight Greaves"
+            },
+            {
+              "id": 14538,
+              "name": "Deadwalker Mantle"
+            },
+            {
+              "id": 14539,
+              "name": "Bone Ring Helm"
+            },
+            {
+              "id": 18686,
+              "name": "Bone Golem Shoulders"
+            }
+          ]
+        },
+        {
+          "name": "Marduk Blackpool",
+          "npcID": 10433,
+          "loot": [
+            {
+              "id": 14576,
+              "name": "Ebon Hilt of Marduk"
+            },
+            {
+              "id": 18692,
+              "name": "Death Knight Sabatons"
+            }
+          ]
+        },
+        {
+          "name": "Vectus",
+          "npcID": 10432,
+          "loot": [
+            {
+              "id": 14577,
+              "name": "Skullsmoke Pants"
+            },
+            {
+              "id": 18691,
+              "name": "Dark Advisor's Pendant"
+            }
+          ]
+        },
+        {
+          "name": "Ras Frostwhisper",
+          "npcID": 10508,
+          "loot": [
+            {
+              "id": 16689,
+              "name": "Magister's Mantle"
+            },
+            {
+              "id": 14487,
+              "name": "Bonechill Hammer"
+            },
+            {
+              "id": 14502,
+              "name": "Frostbite Girdle"
+            },
+            {
+              "id": 18694,
+              "name": "Shadowy Mail Greaves"
+            },
+            {
+              "id": 18696,
+              "name": "Intricately Runed Shield"
+            },
+            {
+              "id": 13952,
+              "name": "Iceblade Hacker"
+            },
+            {
+              "id": 14340,
+              "name": "Freezing Lich Robes"
+            },
+            {
+              "id": 14522,
+              "name": "Maelstrom Leggings"
+            },
+            {
+              "id": 14525,
+              "name": "Boneclenched Gauntlets"
+            },
+            {
+              "id": 18693,
+              "name": "Shivery Handwraps"
+            }
+          ]
+        },
+        {
+          "name": "Instructor Malicia",
+          "npcID": 10505,
+          "loot": [
+            {
+              "id": 16710,
+              "name": "Shadowcraft Bracers"
+            }
+          ]
+        },
+        {
+          "name": "Doctor Theolen Krastinov",
+          "npcID": 11261,
+          "loot": [
+            {
+              "id": 16684,
+              "name": "Magister's Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Lorekeeper Polkelt",
+          "npcID": 10901,
+          "loot": [
+            {
+              "id": 16705,
+              "name": "Dreadmist Wraps"
+            }
+          ]
+        },
+        {
+          "name": "The Ravenian",
+          "npcID": 10507,
+          "loot": [
+            {
+              "id": 16716,
+              "name": "Wildheart Belt"
+            }
+          ]
+        },
+        {
+          "name": "Lord Alexei Barov",
+          "npcID": 10504,
+          "loot": [
+            {
+              "id": 14626,
+              "name": "Necropile Robe"
+            },
+            {
+              "id": 14637,
+              "name": "Cadaverous Armor"
+            },
+            {
+              "id": 18680,
+              "name": "Ancient Bone Bow"
+            },
+            {
+              "id": 18681,
+              "name": "Burial Shawl"
+            },
+            {
+              "id": 18682,
+              "name": "Ghoul Skin Leggings"
+            },
+            {
+              "id": 18683,
+              "name": "Hammer of the Vesper"
+            },
+            {
+              "id": 18684,
+              "name": "Dimly Opalescent Ring"
+            },
+            {
+              "id": 14611,
+              "name": "Bloodmail Hauberk"
+            },
+            {
+              "id": 14624,
+              "name": "Deathbone Chestplate"
+            },
+            {
+              "id": 16722,
+              "name": "Lightforge Bracers"
+            }
+          ]
+        },
+        {
+          "name": "Lady Illucia Barov",
+          "npcID": 10502,
+          "loot": []
+        },
+        {
+          "name": "Darkmaster Gandling",
+          "npcID": 1853,
+          "loot": [
+            {
+              "id": 16677,
+              "name": "Beaststalker's Cap"
+            },
+            {
+              "id": 16686,
+              "name": "Magister's Crown"
+            },
+            {
+              "id": 16731,
+              "name": "Helm of Valor"
+            },
+            {
+              "id": 16698,
+              "name": "Dreadmist Mask"
+            },
+            {
+              "id": 16693,
+              "name": "Devout Crown"
+            },
+            {
+              "id": 16720,
+              "name": "Wildheart Cowl"
+            },
+            {
+              "id": 16707,
+              "name": "Shadowcraft Cap"
+            },
+            {
+              "id": 13951,
+              "name": "Vigorsteel Vambraces"
+            },
+            {
+              "id": 13398,
+              "name": "Boots of the Shrieker"
+            },
+            {
+              "id": 13938,
+              "name": "Bonecreeper Stylus"
+            },
+            {
+              "id": 13944,
+              "name": "Tombstone Breastplate"
+            },
+            {
+              "id": 13953,
+              "name": "Silent Fang"
+            },
+            {
+              "id": 13964,
+              "name": "Witchblade"
+            },
+            {
+              "id": 22433,
+              "name": "Don Mauricio's Band of Domination"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 266672052,
+      "name": "Shadowfang Keep",
+      "type": "Dungeon",
+      "level": "20-30",
+      "minLevel": 20,
+      "maxLevel": 30,
+      "location": "Silverpine Forest",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1421,
+        "x": 0.448,
+        "y": 0.678
+      },
+      "bosses": [
+        {
+          "name": "Rethilgore",
+          "npcID": 3914,
+          "loot": [
+            {
+              "id": 5254,
+              "name": "Rugged Spaulders"
+            },
+            {
+              "id": 273457,
+              "name": "Sorcerer Collar"
+            },
+            {
+              "id": 273456,
+              "name": "Cell Keeper's Claws"
+            }
+          ]
+        },
+        {
+          "name": "Fel Steed / Shadow Charger",
+          "npcID": 3864,
+          "loot": [
+            {
+              "id": 6341,
+              "name": "Eerie Stable Lantern"
+            },
+            {
+              "id": 932,
+              "name": "Fel Steed Saddlebags"
+            },
+            {
+              "id": 251341,
+              "name": "Plans: Guard's Chain Shirt"
+            },
+            {
+              "id": 251362,
+              "name": "Plans: Protector's Gloves"
+            },
+            {
+              "id": 251363,
+              "name": "Plans: Acolyte's Gloves"
+            },
+            {
+              "id": 251364,
+              "name": "Plans: Crusader's Gloves"
+            },
+            {
+              "id": 252781,
+              "name": "Pattern: Stormrider's Leather Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            },
+            {
+              "id": 253902,
+              "name": "Pattern: Filigreed Pristine Gown"
+            },
+            {
+              "id": 253904,
+              "name": "Pattern: Filigreed Silky Gown"
+            },
+            {
+              "id": 253906,
+              "name": "Pattern: Filigreed Flame Gown"
+            },
+            {
+              "id": 253908,
+              "name": "Pattern: Filigreed Shadow Gown"
+            },
+            {
+              "id": 253910,
+              "name": "Pattern: Filigreed Pearly Gown"
+            },
+            {
+              "id": 253912,
+              "name": "Pattern: Filigreed Shining Gown"
+            },
+            {
+              "id": 251381,
+              "name": "Plans: Guard's Silvered Chain Helm"
+            },
+            {
+              "id": 251382,
+              "name": "Plans: Protector's Silvered Chain Helm"
+            },
+            {
+              "id": 252799,
+              "name": "Pattern: Trapper's Leather Hood"
+            },
+            {
+              "id": 252801,
+              "name": "Pattern: Totemic Leather Hood"
+            },
+            {
+              "id": 252803,
+              "name": "Pattern: Wisdom's Leather Hood"
+            },
+            {
+              "id": 253940,
+              "name": "Pattern: Filigreed Silky Leggings"
+            },
+            {
+              "id": 253946,
+              "name": "Pattern: Filigreed Pearly Leggings"
+            },
+            {
+              "id": 253948,
+              "name": "Pattern: Filigreed Shining Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Razorclaw the Butcher",
+          "npcID": 3886,
+          "loot": [
+            {
+              "id": 1292,
+              "name": "Butcher's Cleaver"
+            },
+            {
+              "id": 6226,
+              "name": "Bloody Apron"
+            },
+            {
+              "id": 6633,
+              "name": "Butcher's Slicer"
+            }
+          ]
+        },
+        {
+          "name": "Baron Silverlaine",
+          "npcID": 3887,
+          "loot": [
+            {
+              "id": 6321,
+              "name": "Silverlaine's Family Seal"
+            },
+            {
+              "id": 6323,
+              "name": "Baron's Scepter"
+            },
+            {
+              "id": 273637,
+              "name": "Blade of Silverlaine"
+            }
+          ]
+        },
+        {
+          "name": "Commander Springvale",
+          "npcID": 4278,
+          "loot": [
+            {
+              "id": 6320,
+              "name": "Commander's Crest"
+            },
+            {
+              "id": 3191,
+              "name": "Arced War Axe"
+            },
+            {
+              "id": 273643,
+              "name": "Worgenbane Talisman"
+            },
+            {
+              "id": 273105,
+              "name": "Blueprint: Toxin Study"
+            },
+            {
+              "id": 6341,
+              "name": "Eerie Stable Lantern"
+            }
+          ]
+        },
+        {
+          "name": "Odo the Blindwatcher",
+          "npcID": 4279,
+          "loot": [
+            {
+              "id": 6318,
+              "name": "Odo's Ley Staff"
+            },
+            {
+              "id": 6319,
+              "name": "Girdle of the Blindwatcher"
+            },
+            {
+              "id": 273645,
+              "name": "Blindwatcher's Sight"
+            }
+          ]
+        },
+        {
+          "name": "Deathsworn Captain",
+          "npcID": 3872,
+          "loot": [
+            {
+              "id": 6642,
+              "name": "Phantom Armor"
+            },
+            {
+              "id": 6641,
+              "name": "Haunting Blade"
+            }
+          ]
+        },
+        {
+          "name": "Arugal's Voidwalker",
+          "npcID": 4627,
+          "loot": [
+            {
+              "id": 5943,
+              "name": "Rift Bracers"
+            }
+          ]
+        },
+        {
+          "name": "Fenrus the Devourer",
+          "npcID": 4274,
+          "loot": [
+            {
+              "id": 6340,
+              "name": "Fenrus' Hide"
+            },
+            {
+              "id": 3230,
+              "name": "Black Wolf Bracers"
+            },
+            {
+              "id": 273646,
+              "name": "Half-Eaten Boots"
+            },
+            {
+              "id": 251380,
+              "name": "Plans: Veteran's Silvered Chain Helm"
+            }
+          ]
+        },
+        {
+          "name": "Wolf Master Nandos",
+          "npcID": 3927,
+          "loot": [
+            {
+              "id": 3748,
+              "name": "Feline Mantle"
+            },
+            {
+              "id": 6314,
+              "name": "Wolfmaster Cape"
+            },
+            {
+              "id": 273647,
+              "name": "Worgpelt Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Archmage Arugal",
+          "npcID": 4275,
+          "loot": [
+            {
+              "id": 6324,
+              "name": "Robes of Arugal"
+            },
+            {
+              "id": 6392,
+              "name": "Belt of Arugal"
+            },
+            {
+              "id": 6220,
+              "name": "Meteor Shard"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 1489,
+              "name": "Gloomshroud Armor"
+            },
+            {
+              "id": 1974,
+              "name": "Mindthrust Bracers"
+            },
+            {
+              "id": 1483,
+              "name": "Face Smasher"
+            },
+            {
+              "id": 2292,
+              "name": "Necrology Robes"
+            },
+            {
+              "id": 2205,
+              "name": "Duskbringer"
+            },
+            {
+              "id": 2807,
+              "name": "Guillotine Axe"
+            },
+            {
+              "id": 3194,
+              "name": "Black Malice"
+            },
+            {
+              "id": 1482,
+              "name": "Shadowfang"
+            },
+            {
+              "id": 1935,
+              "name": "Assassin's Blade"
+            },
+            {
+              "id": 1318,
+              "name": "Night Reaver"
+            },
+            {
+              "id": 1484,
+              "name": "Witching Stave"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 167718838,
+      "name": "Shaper's Terrace",
+      "type": "Dungeon",
+      "level": "58-60",
+      "minLevel": 58,
+      "maxLevel": 60,
+      "location": "Un'Goro Crater",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": null,
+      "bosses": []
+    },
+    {
+      "id": 117234793,
+      "name": "Stratholme: Living",
+      "type": "Dungeon",
+      "level": "58-60",
+      "minLevel": 58,
+      "maxLevel": 60,
+      "location": "Eastern Plaguelands",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1423,
+        "x": 0.3,
+        "y": 0.15
+      },
+      "bosses": [
+        {
+          "name": "Skul",
+          "npcID": 10393,
+          "loot": [
+            {
+              "id": 13394,
+              "name": "Skul's Cold Embrace"
+            },
+            {
+              "id": 13396,
+              "name": "Skul's Ghastly Touch"
+            },
+            {
+              "id": 13395,
+              "name": "Skul's Fingerbone Claws"
+            }
+          ]
+        },
+        {
+          "name": "Hearthsinger Forresten",
+          "npcID": 10558,
+          "loot": [
+            {
+              "id": 13378,
+              "name": "Songbird Blouse"
+            },
+            {
+              "id": 13379,
+              "name": "Piccolo of the Flaming Fire"
+            },
+            {
+              "id": 13384,
+              "name": "Rainbow Girdle"
+            },
+            {
+              "id": 13383,
+              "name": "Woollies of the Prancing Minstrel"
+            },
+            {
+              "id": 16682,
+              "name": "Magister's Boots"
+            }
+          ]
+        },
+        {
+          "name": "The Unforgiven",
+          "npcID": 10516,
+          "loot": [
+            {
+              "id": 13405,
+              "name": "Wailing Nightbane Pauldrons"
+            },
+            {
+              "id": 13404,
+              "name": "Mask of the Unforgiven"
+            },
+            {
+              "id": 13408,
+              "name": "Soul Breaker"
+            },
+            {
+              "id": 13409,
+              "name": "Tearfall Bracers"
+            },
+            {
+              "id": 16717,
+              "name": "Wildheart Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Timmy the Cruel",
+          "npcID": 10808,
+          "loot": [
+            {
+              "id": 13400,
+              "name": "Vambraces of the Sadist"
+            },
+            {
+              "id": 13402,
+              "name": "Timmy's Galoshes"
+            },
+            {
+              "id": 13401,
+              "name": "The Cruel Hand of Timmy"
+            },
+            {
+              "id": 13403,
+              "name": "Grimgore Noose"
+            },
+            {
+              "id": 16724,
+              "name": "Lightforge Gauntlets"
+            }
+          ]
+        },
+        {
+          "name": "Postmaster Malown",
+          "npcID": 11143,
+          "loot": [
+            {
+              "id": 13392,
+              "name": "The Postmaster's Seal"
+            },
+            {
+              "id": 13388,
+              "name": "The Postmaster's Tunic"
+            },
+            {
+              "id": 13389,
+              "name": "The Postmaster's Trousers"
+            },
+            {
+              "id": 13391,
+              "name": "The Postmaster's Treads"
+            },
+            {
+              "id": 13393,
+              "name": "Malown's Slam"
+            }
+          ]
+        },
+        {
+          "name": "Cannon Master Willey",
+          "npcID": 10997,
+          "loot": [
+            {
+              "id": 22403,
+              "name": "Nacreous Shell Necklace"
+            },
+            {
+              "id": 13380,
+              "name": "Willey's Portable Howitzer"
+            },
+            {
+              "id": 13382,
+              "name": "Cannonball Runner"
+            },
+            {
+              "id": 18721,
+              "name": "Barrage Girdle"
+            },
+            {
+              "id": 22407,
+              "name": "Helm of the New Moon"
+            },
+            {
+              "id": 16708,
+              "name": "Shadowcraft Spaulders"
+            },
+            {
+              "id": 13381,
+              "name": "Master Cannoneer Boots"
+            },
+            {
+              "id": 22405,
+              "name": "Mantle of the Scarlet Crusade"
+            },
+            {
+              "id": 22404,
+              "name": "Willey's Back Scratcher"
+            },
+            {
+              "id": 22406,
+              "name": "Redemption"
+            }
+          ]
+        },
+        {
+          "name": "Archivist Galford",
+          "npcID": 10811,
+          "loot": [
+            {
+              "id": 13387,
+              "name": "Foresight Girdle"
+            },
+            {
+              "id": 13386,
+              "name": "Archivist Cape"
+            },
+            {
+              "id": 18716,
+              "name": "Ash Covered Boots"
+            },
+            {
+              "id": 16692,
+              "name": "Devout Gloves"
+            },
+            {
+              "id": 13385,
+              "name": "Tome of Knowledge"
+            }
+          ]
+        },
+        {
+          "name": "Balnazzar",
+          "npcID": 10813,
+          "loot": [
+            {
+              "id": 13353,
+              "name": "Book of the Dead"
+            },
+            {
+              "id": 13348,
+              "name": "Demonshear"
+            },
+            {
+              "id": 13358,
+              "name": "Wyrmtongue Shoulders"
+            },
+            {
+              "id": 13359,
+              "name": "Crown of Tyranny"
+            },
+            {
+              "id": 18718,
+              "name": "Grand Crusader's Helm"
+            },
+            {
+              "id": 18720,
+              "name": "Shroud of the Nathrezim"
+            },
+            {
+              "id": 13360,
+              "name": "Gift of the Elven Magi"
+            },
+            {
+              "id": 12103,
+              "name": "Star of Mystaria"
+            },
+            {
+              "id": 18717,
+              "name": "Hammer of the Grand Crusader"
+            },
+            {
+              "id": 13369,
+              "name": "Fire Striders"
+            },
+            {
+              "id": 16725,
+              "name": "Lightforge Boots"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 121473179,
+      "name": "Stratholme: Undead",
+      "type": "Dungeon",
+      "level": "58-60",
+      "minLevel": 58,
+      "maxLevel": 60,
+      "location": "Eastern Plaguelands",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1423,
+        "x": 0.44,
+        "y": 0.19
+      },
+      "bosses": [
+        {
+          "name": "Stonespine",
+          "npcID": 10809,
+          "loot": [
+            {
+              "id": 13399,
+              "name": "Gargoyle Shredder Talons"
+            },
+            {
+              "id": 13397,
+              "name": "Stoneskin Gargoyle Cape"
+            },
+            {
+              "id": 13954,
+              "name": "Verdant Footpads"
+            }
+          ]
+        },
+        {
+          "name": "Magistrate Barthilas",
+          "npcID": 10435,
+          "loot": [
+            {
+              "id": 18722,
+              "name": "Death Grips"
+            },
+            {
+              "id": 13376,
+              "name": "Royal Tribunal Cloak"
+            },
+            {
+              "id": 18725,
+              "name": "Peacemaker"
+            },
+            {
+              "id": 18727,
+              "name": "Crimson Felt Hat"
+            },
+            {
+              "id": 18726,
+              "name": "Magistrate's Cuffs"
+            }
+          ]
+        },
+        {
+          "name": "Nerub'enkan",
+          "npcID": 10437,
+          "loot": [
+            {
+              "id": 13529,
+              "name": "Husk of Nerub'enkan"
+            },
+            {
+              "id": 16675,
+              "name": "Beaststalker's Boots"
+            },
+            {
+              "id": 18738,
+              "name": "Carapace Spine Crossbow"
+            },
+            {
+              "id": 18739,
+              "name": "Chitinous Plate Legguards"
+            },
+            {
+              "id": 18740,
+              "name": "Thuzadin Sash"
+            }
+          ]
+        },
+        {
+          "name": "Baroness Anastari",
+          "npcID": 10436,
+          "loot": [
+            {
+              "id": 16704,
+              "name": "Dreadmist Sandals"
+            },
+            {
+              "id": 13534,
+              "name": "Banshee Finger"
+            },
+            {
+              "id": 18728,
+              "name": "Anastari Heirloom"
+            },
+            {
+              "id": 18730,
+              "name": "Shadowy Laced Handwraps"
+            },
+            {
+              "id": 18729,
+              "name": "Screeching Bow"
+            }
+          ]
+        },
+        {
+          "name": "Maleki the Pallid",
+          "npcID": 10438,
+          "loot": [
+            {
+              "id": 18737,
+              "name": "Bone Slicing Hatchet"
+            },
+            {
+              "id": 16691,
+              "name": "Devout Sandals"
+            },
+            {
+              "id": 13524,
+              "name": "Skull of Burning Shadows"
+            },
+            {
+              "id": 18734,
+              "name": "Pale Moon Cloak"
+            },
+            {
+              "id": 18735,
+              "name": "Maleki's Footwraps"
+            }
+          ]
+        },
+        {
+          "name": "Ramstein the Gorger",
+          "npcID": 10439,
+          "loot": [
+            {
+              "id": 16737,
+              "name": "Gauntlets of Valor"
+            },
+            {
+              "id": 13372,
+              "name": "Slavedriver's Cane"
+            },
+            {
+              "id": 13373,
+              "name": "Band of Flesh"
+            },
+            {
+              "id": 13374,
+              "name": "Soulstealer Mantle"
+            },
+            {
+              "id": 13375,
+              "name": "Crest of Retribution"
+            },
+            {
+              "id": 13515,
+              "name": "Ramstein's Lightning Bolts"
+            },
+            {
+              "id": 18723,
+              "name": "Animated Chain Necklace"
+            }
+          ]
+        },
+        {
+          "name": "Baron Rivendare",
+          "npcID": 10440,
+          "loot": [
+            {
+              "id": 13340,
+              "name": "Cape of the Black Baron"
+            },
+            {
+              "id": 22408,
+              "name": "Ritssyn's Wand of Bad Mojo"
+            },
+            {
+              "id": 22409,
+              "name": "Tunic of the Crescent Moon"
+            },
+            {
+              "id": 13346,
+              "name": "Robes of the Exalted"
+            },
+            {
+              "id": 22412,
+              "name": "Thuzadin Mantle"
+            },
+            {
+              "id": 13344,
+              "name": "Dracorian Gauntlets"
+            },
+            {
+              "id": 13349,
+              "name": "Scepter of the Unholy"
+            },
+            {
+              "id": 22410,
+              "name": "Gauntlets of Deftness"
+            },
+            {
+              "id": 22411,
+              "name": "Helm of the Executioner"
+            },
+            {
+              "id": 13345,
+              "name": "Seal of Rivendare"
+            },
+            {
+              "id": 16678,
+              "name": "Beaststalker's Pants"
+            },
+            {
+              "id": 16687,
+              "name": "Magister's Leggings"
+            },
+            {
+              "id": 16694,
+              "name": "Devout Skirt"
+            },
+            {
+              "id": 16709,
+              "name": "Shadowcraft Pants"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 203575617,
+      "name": "Sunken Temple",
+      "type": "Dungeon",
+      "level": "49-56",
+      "minLevel": 49,
+      "maxLevel": 56,
+      "location": "Swamp of Sorrows",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1435,
+        "x": 0.695,
+        "y": 0.535
+      },
+      "bosses": [
+        {
+          "name": "Atal'alarion",
+          "npcID": 8580,
+          "loot": [
+            {
+              "id": 10800,
+              "name": "Darkwater Bracers"
+            },
+            {
+              "id": 10798,
+              "name": "Atal'alarion's Tusk Ring"
+            },
+            {
+              "id": 10799,
+              "name": "Headspike"
+            }
+          ]
+        },
+        {
+          "name": "Dreamscythe",
+          "npcID": 5721,
+          "loot": [
+            {
+              "id": 12465,
+              "name": "Nightfall Drape"
+            },
+            {
+              "id": 12466,
+              "name": "Dawnspire Cord"
+            },
+            {
+              "id": 12243,
+              "name": "Smoldering Claw"
+            }
+          ]
+        },
+        {
+          "name": "Weaver",
+          "npcID": 5720,
+          "loot": [
+            {
+              "id": 12465,
+              "name": "Nightfall Drape"
+            },
+            {
+              "id": 12466,
+              "name": "Dawnspire Cord"
+            },
+            {
+              "id": 12243,
+              "name": "Smoldering Claw"
+            }
+          ]
+        },
+        {
+          "name": "Avatar of Hakkar",
+          "npcID": 8443,
+          "loot": []
+        },
+        {
+          "name": "Jammal'an the Prophet",
+          "npcID": 5710,
+          "loot": [
+            {
+              "id": 10806,
+              "name": "Vestments of the Atal'ai Prophet"
+            },
+            {
+              "id": 10807,
+              "name": "Kilt of the Atal'ai Prophet"
+            },
+            {
+              "id": 10808,
+              "name": "Gloves of the Atal'ai Prophet"
+            }
+          ]
+        },
+        {
+          "name": "Ogom the Wretched",
+          "npcID": 5711,
+          "loot": [
+            {
+              "id": 10804,
+              "name": "Fist of the Damned"
+            }
+          ]
+        },
+        {
+          "name": "Morphaz",
+          "npcID": 5719,
+          "loot": [
+            {
+              "id": 12465,
+              "name": "Nightfall Drape"
+            },
+            {
+              "id": 12466,
+              "name": "Dawnspire Cord"
+            },
+            {
+              "id": 12243,
+              "name": "Smoldering Claw"
+            }
+          ]
+        },
+        {
+          "name": "Hazzas",
+          "npcID": 5722,
+          "loot": [
+            {
+              "id": 12465,
+              "name": "Nightfall Drape"
+            },
+            {
+              "id": 12466,
+              "name": "Dawnspire Cord"
+            },
+            {
+              "id": 12243,
+              "name": "Smoldering Claw"
+            }
+          ]
+        },
+        {
+          "name": "Shade of Eranikus",
+          "npcID": 5709,
+          "loot": [
+            {
+              "id": 10829,
+              "name": "Dragon's Eye"
+            },
+            {
+              "id": 10833,
+              "name": "Horns of Eranikus"
+            },
+            {
+              "id": 10835,
+              "name": "Crest of Supremacy"
+            },
+            {
+              "id": 10836,
+              "name": "Rod of Corrosion"
+            },
+            {
+              "id": 10828,
+              "name": "Dire Nail"
+            },
+            {
+              "id": 10837,
+              "name": "Tooth of Eranikus"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 24814946,
+      "name": "The Deadmines",
+      "type": "Dungeon",
+      "level": "17-26",
+      "minLevel": 17,
+      "maxLevel": 26,
+      "location": "Moonbrook, Westfall",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1436,
+        "x": 0.425,
+        "y": 0.717
+      },
+      "bosses": [
+        {
+          "name": "Rhahk'Zor",
+          "npcID": 644,
+          "loot": [
+            {
+              "id": 872,
+              "name": "Rockslicer"
+            },
+            {
+              "id": 5187,
+              "name": "Rhahk'Zor's Hammer"
+            },
+            {
+              "id": 273289,
+              "name": "Ogre Loincloth"
+            },
+            {
+              "id": 251362,
+              "name": "Plans: Protector's Gloves"
+            },
+            {
+              "id": 251364,
+              "name": "Plans: Crusader's Gloves"
+            },
+            {
+              "id": 253906,
+              "name": "Pattern: Filigreed Flame Gown"
+            }
+          ]
+        },
+        {
+          "name": "Miner Johnson",
+          "npcID": 3586,
+          "loot": [
+            {
+              "id": 5443,
+              "name": "Gold-plated Buckler"
+            },
+            {
+              "id": 5444,
+              "name": "Miner's Cape"
+            }
+          ]
+        },
+        {
+          "name": "Sneed's Shredder",
+          "npcID": 642,
+          "loot": [
+            {
+              "id": 1937,
+              "name": "Buzz Saw"
+            },
+            {
+              "id": 2169,
+              "name": "Buzzer Blade"
+            },
+            {
+              "id": 285292,
+              "name": "Dull Sawblade"
+            }
+          ]
+        },
+        {
+          "name": "Sneed",
+          "npcID": 643,
+          "loot": [
+            {
+              "id": 5194,
+              "name": "Taskmaster Axe"
+            },
+            {
+              "id": 5195,
+              "name": "Gold-flecked Gloves"
+            },
+            {
+              "id": 273293,
+              "name": "Bandsaw Wristbands"
+            },
+            {
+              "id": 273092,
+              "name": "Blueprint: Repair Bot"
+            },
+            {
+              "id": 251360,
+              "name": "Plans: Veteran's Gloves"
+            },
+            {
+              "id": 251364,
+              "name": "Plans: Crusader's Gloves"
+            },
+            {
+              "id": 253902,
+              "name": "Pattern: Filigreed Pristine Gown"
+            }
+          ]
+        },
+        {
+          "name": "Gilnid",
+          "npcID": 1763,
+          "loot": [
+            {
+              "id": 1156,
+              "name": "Lavishly Jeweled Ring"
+            },
+            {
+              "id": 5199,
+              "name": "Smelting Pants"
+            },
+            {
+              "id": 273297,
+              "name": "Goblin Hammer"
+            },
+            {
+              "id": 252777,
+              "name": "Pattern: Brawler's Leather Gloves"
+            },
+            {
+              "id": 252778,
+              "name": "Pattern: Trapper's Leather Gloves"
+            },
+            {
+              "id": 252780,
+              "name": "Pattern: Totemic Leather Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            },
+            {
+              "id": 253904,
+              "name": "Pattern: Filigreed Silky Gown"
+            },
+            {
+              "id": 253906,
+              "name": "Pattern: Filigreed Flame Gown"
+            },
+            {
+              "id": 273086,
+              "name": "Blueprint: Anvil"
+            }
+          ]
+        },
+        {
+          "name": "Mr. Smite",
+          "npcID": 646,
+          "loot": [
+            {
+              "id": 7230,
+              "name": "Smite's Mighty Hammer"
+            },
+            {
+              "id": 5192,
+              "name": "Thief's Blade"
+            },
+            {
+              "id": 5196,
+              "name": "Smite's Reaver"
+            },
+            {
+              "id": 284715,
+              "name": "First Mate Band"
+            },
+            {
+              "id": 251362,
+              "name": "Plans: Protector's Gloves"
+            },
+            {
+              "id": 252779,
+              "name": "Pattern: Defender's Leather Gloves"
+            },
+            {
+              "id": 252780,
+              "name": "Pattern: Totemic Leather Gloves"
+            },
+            {
+              "id": 252781,
+              "name": "Pattern: Stormrider's Leather Gloves"
+            },
+            {
+              "id": 252782,
+              "name": "Pattern: Wisdom's Leather Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Captain Greenskin",
+          "npcID": 647,
+          "loot": [
+            {
+              "id": 5201,
+              "name": "Emberstone Staff"
+            },
+            {
+              "id": 10403,
+              "name": "Blackened Defias Belt"
+            },
+            {
+              "id": 5200,
+              "name": "Impaling Harpoon"
+            }
+          ]
+        },
+        {
+          "name": "Edwin VanCleef",
+          "npcID": 639,
+          "loot": [
+            {
+              "id": 5193,
+              "name": "Cape of the Brotherhood"
+            },
+            {
+              "id": 5202,
+              "name": "Corsair's Overshirt"
+            },
+            {
+              "id": 10399,
+              "name": "Blackened Defias Armor"
+            },
+            {
+              "id": 5191,
+              "name": "Cruel Barb"
+            },
+            {
+              "id": 2874,
+              "name": "An Unsent Letter"
+            },
+            {
+              "id": 252799,
+              "name": "Pattern: Trapper's Leather Hood"
+            },
+            {
+              "id": 252800,
+              "name": "Pattern: Defender's Leather Hood"
+            },
+            {
+              "id": 252801,
+              "name": "Pattern: Totemic Leather Hood"
+            },
+            {
+              "id": 252803,
+              "name": "Pattern: Wisdom's Leather Hood"
+            },
+            {
+              "id": 253938,
+              "name": "Pattern: Filigreed Pristine Leggings"
+            },
+            {
+              "id": 253948,
+              "name": "Pattern: Filigreed Shining Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Cookie",
+          "npcID": 645,
+          "loot": [
+            {
+              "id": 5198,
+              "name": "Cookie's Stirring Rod"
+            },
+            {
+              "id": 5197,
+              "name": "Cookie's Tenderizer"
+            },
+            {
+              "id": 273298,
+              "name": "Lookie's Spyglass"
+            },
+            {
+              "id": 251360,
+              "name": "Plans: Veteran's Gloves"
+            },
+            {
+              "id": 252778,
+              "name": "Pattern: Trapper's Leather Gloves"
+            },
+            {
+              "id": 252779,
+              "name": "Pattern: Defender's Leather Gloves"
+            },
+            {
+              "id": 253910,
+              "name": "Pattern: Filigreed Pearly Gown"
+            },
+            {
+              "id": 253912,
+              "name": "Pattern: Filigreed Shining Gown"
+            },
+            {
+              "id": 273102,
+              "name": "Blueprint: Cookie's Feast"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10402,
+              "name": "Blackened Defias Boots"
+            },
+            {
+              "id": 10401,
+              "name": "Blackened Defias Gloves"
+            },
+            {
+              "id": 10400,
+              "name": "Blackened Defias Leggings"
+            },
+            {
+              "id": 1951,
+              "name": "Blackwater Cutlass"
+            },
+            {
+              "id": 1929,
+              "name": "Silk-threaded Trousers"
+            },
+            {
+              "id": 1934,
+              "name": "Stonemason Trousers"
+            },
+            {
+              "id": 1936,
+              "name": "Goblin Screwdriver"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 198051468,
+      "name": "The Drowned City",
+      "type": "Dungeon",
+      "level": "35-40",
+      "minLevel": 35,
+      "maxLevel": 40,
+      "location": "Stranglethorn Vale",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1434,
+        "x": 0.214,
+        "y": 0.279
+      },
+      "bosses": [
+        {
+          "name": "Zul'Alai",
+          "npcID": 258905,
+          "loot": []
+        },
+        {
+          "name": "Var'Taka",
+          "npcID": 258924,
+          "loot": []
+        },
+        {
+          "name": "Captain Dreadrise",
+          "npcID": 260042,
+          "loot": []
+        },
+        {
+          "name": "Deathless Marrow",
+          "npcID": null,
+          "loot": []
+        },
+        {
+          "name": "Gill",
+          "npcID": 264177,
+          "loot": [
+            {
+              "id": 286646,
+              "name": "Gill's Gills"
+            }
+          ]
+        },
+        {
+          "name": "Min'loth the Serpent",
+          "npcID": 260274,
+          "loot": []
+        }
+      ]
+    },
+    {
+      "id": 205782883,
+      "name": "The Stockade",
+      "type": "Dungeon",
+      "level": "24-32",
+      "minLevel": 24,
+      "maxLevel": 32,
+      "location": "Stormwind City",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1453,
+        "x": 0.524,
+        "y": 0.7
+      },
+      "bosses": [
+        {
+          "name": "Targorr the Dread",
+          "npcID": 1696,
+          "loot": [
+            {
+              "id": 273805,
+              "name": "Blackrock Harness"
+            },
+            {
+              "id": 273804,
+              "name": "Executioner Mantle"
+            },
+            {
+              "id": 273806,
+              "name": "Dark Horde Band"
+            },
+            {
+              "id": 251380,
+              "name": "Plans: Veteran's Silvered Chain Helm"
+            },
+            {
+              "id": 251382,
+              "name": "Plans: Protector's Silvered Chain Helm"
+            },
+            {
+              "id": 253942,
+              "name": "Pattern: Filigreed Flame Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Kam Deepfury",
+          "npcID": 1666,
+          "loot": [
+            {
+              "id": 2280,
+              "name": "Kam's Walking Stick"
+            },
+            {
+              "id": 273807,
+              "name": "Demolition Girdle"
+            },
+            {
+              "id": 273808,
+              "name": "Bridgebreaker Bindings"
+            },
+            {
+              "id": 251379,
+              "name": "Plans: Crusader's Silvered Chain Leggings"
+            },
+            {
+              "id": 252825,
+              "name": "Pattern: Wisdom's Leather Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Hamhock",
+          "npcID": 1717,
+          "loot": [
+            {
+              "id": 273809,
+              "name": "Hamhock's Cleaver"
+            },
+            {
+              "id": 273810,
+              "name": "Ogre Grips"
+            },
+            {
+              "id": 273811,
+              "name": "Repurposed Rack"
+            },
+            {
+              "id": 251377,
+              "name": "Plans: Protector's Silvered Chain Leggings"
+            }
+          ]
+        },
+        {
+          "name": "Dextren Ward",
+          "npcID": 1663,
+          "loot": [
+            {
+              "id": 273817,
+              "name": "Graverobber's Shovel"
+            },
+            {
+              "id": 273819,
+              "name": "Boneslicer"
+            },
+            {
+              "id": 273820,
+              "name": "Nightskulker Ring"
+            },
+            {
+              "id": 251375,
+              "name": "Plans: Veteran's Silvered Chain Leggings"
+            },
+            {
+              "id": 251376,
+              "name": "Plans: Guard's Silvered Chain Leggings"
+            },
+            {
+              "id": 252820,
+              "name": "Pattern: Brawler's Leather Legguards"
+            },
+            {
+              "id": 252821,
+              "name": "Pattern: Trapper's Leather Legguards"
+            }
+          ]
+        },
+        {
+          "name": "Bazil Thredd",
+          "npcID": 1716,
+          "loot": [
+            {
+              "id": 273827,
+              "name": "Debt Collector"
+            },
+            {
+              "id": 273824,
+              "name": "Defias Jailbreakers"
+            },
+            {
+              "id": 273825,
+              "name": "Red Wool Cloak"
+            },
+            {
+              "id": 273829,
+              "name": "Concealed Hand Crossbow"
+            },
+            {
+              "id": 252824,
+              "name": "Pattern: Stormrider's Leather Kilt"
+            },
+            {
+              "id": 253976,
+              "name": "Pattern: Filigreed Pristine Circlet"
+            },
+            {
+              "id": 253986,
+              "name": "Pattern: Filigreed Shining Circlet"
+            }
+          ]
+        },
+        {
+          "name": "Bruegal Ironknuckle",
+          "npcID": 1720,
+          "loot": [
+            {
+              "id": 3228,
+              "name": "Jimmied Handcuffs"
+            },
+            {
+              "id": 2941,
+              "name": "Prison Shank"
+            },
+            {
+              "id": 2942,
+              "name": "Iron Knuckles"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 274092,
+              "name": "Sharpened Cutlery"
+            },
+            {
+              "id": 1076,
+              "name": "Defias Renegade Ring"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 96008546,
+      "name": "Uldaman",
+      "type": "Dungeon",
+      "level": "38-48",
+      "minLevel": 38,
+      "maxLevel": 48,
+      "location": "Badlands",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1418,
+        "x": 0.443,
+        "y": 0.12
+      },
+      "bosses": [
+        {
+          "name": "Revelosh",
+          "npcID": 6910,
+          "loot": [
+            {
+              "id": 9389,
+              "name": "Revelosh's Spaulders"
+            },
+            {
+              "id": 9388,
+              "name": "Revelosh's Armguards"
+            },
+            {
+              "id": 9387,
+              "name": "Revelosh's Boots"
+            },
+            {
+              "id": 9390,
+              "name": "Revelosh's Gloves"
+            }
+          ]
+        },
+        {
+          "name": "The Lost Dwarves",
+          "npcID": 6906,
+          "loot": [
+            {
+              "id": 9400,
+              "name": "Baelog's Shortbow"
+            },
+            {
+              "id": 9401,
+              "name": "Nordic Longshank"
+            },
+            {
+              "id": 9398,
+              "name": "Worn Running Boots"
+            },
+            {
+              "id": 9394,
+              "name": "Horned Viking Helmet"
+            },
+            {
+              "id": 9403,
+              "name": "Battered Viking Shield"
+            },
+            {
+              "id": 9404,
+              "name": "Olaf's All Purpose Shield"
+            },
+            {
+              "id": 9399,
+              "name": "Precision Arrow"
+            }
+          ]
+        },
+        {
+          "name": "Ironaya",
+          "npcID": 7228,
+          "loot": [
+            {
+              "id": 9407,
+              "name": "Stoneweaver Leggings"
+            },
+            {
+              "id": 9409,
+              "name": "Ironaya's Bracers"
+            },
+            {
+              "id": 9408,
+              "name": "Ironshod Bludgeon"
+            }
+          ]
+        },
+        {
+          "name": "Ancient Stone Keeper",
+          "npcID": 7206,
+          "loot": [
+            {
+              "id": 9410,
+              "name": "Cragfists"
+            },
+            {
+              "id": 9411,
+              "name": "Rockshard Pauldrons"
+            }
+          ]
+        },
+        {
+          "name": "Galgann Firehammer",
+          "npcID": 7291,
+          "loot": [
+            {
+              "id": 11311,
+              "name": "Emberscale Cape"
+            },
+            {
+              "id": 11310,
+              "name": "Flameseer Mantle"
+            },
+            {
+              "id": 9419,
+              "name": "Galgann's Firehammer"
+            },
+            {
+              "id": 9412,
+              "name": "Galgann's Fireblaster"
+            }
+          ]
+        },
+        {
+          "name": "Grimlok",
+          "npcID": 4854,
+          "loot": [
+            {
+              "id": 9415,
+              "name": "Grimlok's Tribal Vestments"
+            },
+            {
+              "id": 9414,
+              "name": "Oilskin Leggings"
+            },
+            {
+              "id": 9416,
+              "name": "Grimlok's Charge"
+            }
+          ]
+        },
+        {
+          "name": "Archaedas",
+          "npcID": 2748,
+          "loot": [
+            {
+              "id": 11118,
+              "name": "Archaedic Stone"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 108035093,
+      "name": "Upper Blackrock Spire",
+      "type": "Dungeon",
+      "level": "55-60",
+      "minLevel": 55,
+      "maxLevel": 60,
+      "location": "Blackrock Mountain",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1427,
+        "x": 0.348,
+        "y": 0.84
+      },
+      "bosses": [
+        {
+          "name": "Pyroguard Emberseer",
+          "npcID": 9816,
+          "loot": [
+            {
+              "id": 12905,
+              "name": "Wildfire Cape"
+            },
+            {
+              "id": 12926,
+              "name": "Flaming Band"
+            },
+            {
+              "id": 12927,
+              "name": "Truestrike Shoulders"
+            },
+            {
+              "id": 12929,
+              "name": "Emberfury Talisman"
+            },
+            {
+              "id": 16672,
+              "name": "Gauntlets of Elements"
+            }
+          ]
+        },
+        {
+          "name": "Solakar Flamewreath",
+          "npcID": 10264,
+          "loot": [
+            {
+              "id": 12589,
+              "name": "Dustfeather Sash"
+            },
+            {
+              "id": 12603,
+              "name": "Nightbrace Tunic"
+            },
+            {
+              "id": 12606,
+              "name": "Crystallized Girdle"
+            },
+            {
+              "id": 12609,
+              "name": "Polychromatic Visionwrap"
+            },
+            {
+              "id": 16695,
+              "name": "Devout Mantle"
+            }
+          ]
+        },
+        {
+          "name": "Jed Runewatcher",
+          "npcID": 10509,
+          "loot": [
+            {
+              "id": 12604,
+              "name": "Starfire Tiara"
+            },
+            {
+              "id": 12605,
+              "name": "Serpentine Skuller"
+            },
+            {
+              "id": 12930,
+              "name": "Briarwood Reed"
+            }
+          ]
+        },
+        {
+          "name": "Goraluk Anvilcrack",
+          "npcID": 10899,
+          "loot": [
+            {
+              "id": 18048,
+              "name": "Mastersmith's Hammer"
+            },
+            {
+              "id": 13498,
+              "name": "Handcrafted Mastersmith Leggings"
+            },
+            {
+              "id": 18047,
+              "name": "Flame Walkers"
+            },
+            {
+              "id": 13502,
+              "name": "Handcrafted Mastersmith Girdle"
+            },
+            {
+              "id": 12834,
+              "name": "Plans: Arcanite Champion"
+            },
+            {
+              "id": 12837,
+              "name": "Plans: Masterwork Stormhammer"
+            }
+          ]
+        },
+        {
+          "name": "Gyth",
+          "npcID": 10339,
+          "loot": [
+            {
+              "id": 12952,
+              "name": "Gyth's Skull"
+            },
+            {
+              "id": 12953,
+              "name": "Dragoneye Coif"
+            },
+            {
+              "id": 12960,
+              "name": "Tribal War Feathers"
+            },
+            {
+              "id": 16669,
+              "name": "Pauldrons of Elements"
+            },
+            {
+              "id": 22225,
+              "name": "Dragonskin Cowl"
+            }
+          ]
+        },
+        {
+          "name": "Warchief Rend Blackhand",
+          "npcID": 10429,
+          "loot": [
+            {
+              "id": 12583,
+              "name": "Blackhand Doomsaw"
+            },
+            {
+              "id": 12587,
+              "name": "Eye of Rend"
+            },
+            {
+              "id": 12935,
+              "name": "Warmaster Legguards"
+            },
+            {
+              "id": 12936,
+              "name": "Battleborn Armbraces"
+            },
+            {
+              "id": 12939,
+              "name": "Dal'Rend's Tribal Guardian"
+            },
+            {
+              "id": 12940,
+              "name": "Dal'Rend's Sacred Charge"
+            },
+            {
+              "id": 16733,
+              "name": "Spaulders of Valor"
+            },
+            {
+              "id": 18102,
+              "name": "Dragonrider Boots"
+            },
+            {
+              "id": 18103,
+              "name": "Band of Rumination"
+            },
+            {
+              "id": 18104,
+              "name": "Feralsurge Girdle"
+            },
+            {
+              "id": 22247,
+              "name": "Faith Healer's Boots"
+            }
+          ]
+        },
+        {
+          "name": "The Beast",
+          "npcID": 10430,
+          "loot": [
+            {
+              "id": 12709,
+              "name": "Pip's Skinner"
+            },
+            {
+              "id": 12963,
+              "name": "Blademaster Leggings"
+            },
+            {
+              "id": 12964,
+              "name": "Tristam Legguards"
+            },
+            {
+              "id": 12965,
+              "name": "Spiritshroud Leggings"
+            },
+            {
+              "id": 12966,
+              "name": "Blackmist Armguards"
+            },
+            {
+              "id": 12967,
+              "name": "Bloodmoon Cloak"
+            },
+            {
+              "id": 12968,
+              "name": "Frostweaver Cape"
+            },
+            {
+              "id": 12969,
+              "name": "Seeping Willow"
+            },
+            {
+              "id": 16729,
+              "name": "Lightforge Spaulders"
+            },
+            {
+              "id": 22311,
+              "name": "Ironweave Boots"
+            }
+          ]
+        },
+        {
+          "name": "Lord Valthalak",
+          "npcID": 16042,
+          "loot": [
+            {
+              "id": 22335,
+              "name": "Lord Valthalak's Staff of Command"
+            },
+            {
+              "id": 22336,
+              "name": "Draconian Aegis of the Legion"
+            },
+            {
+              "id": 22337,
+              "name": "Shroud of Domination"
+            },
+            {
+              "id": 22339,
+              "name": "Rune Band of Wizardry"
+            },
+            {
+              "id": 22340,
+              "name": "Pendant of Celerity"
+            },
+            {
+              "id": 22342,
+              "name": "Leggings of Torment"
+            },
+            {
+              "id": 22343,
+              "name": "Handguards of Savagery"
+            },
+            {
+              "id": 22302,
+              "name": "Ironweave Cowl"
+            }
+          ]
+        },
+        {
+          "name": "General Drakkisath",
+          "npcID": 10363,
+          "loot": [
+            {
+              "id": 13141,
+              "name": "Tooth of Gnarr"
+            },
+            {
+              "id": 13098,
+              "name": "Painweaver Band"
+            },
+            {
+              "id": 13142,
+              "name": "Brigam Girdle"
+            },
+            {
+              "id": 12602,
+              "name": "Draconian Deflector"
+            },
+            {
+              "id": 22253,
+              "name": "Tome of the Lost"
+            },
+            {
+              "id": 22267,
+              "name": "Spellweaver's Turban"
+            },
+            {
+              "id": 22269,
+              "name": "Shadow Prowler's Cloak"
+            },
+            {
+              "id": 22268,
+              "name": "Draconic Infused Emblem"
+            },
+            {
+              "id": 16730,
+              "name": "Breastplate of Valor"
+            },
+            {
+              "id": 16726,
+              "name": "Lightforge Breastplate"
+            },
+            {
+              "id": 16674,
+              "name": "Beaststalker's Tunic"
+            },
+            {
+              "id": 16666,
+              "name": "Vest of Elements"
+            },
+            {
+              "id": 16706,
+              "name": "Wildheart Vest"
+            },
+            {
+              "id": 16721,
+              "name": "Shadowcraft Tunic"
+            },
+            {
+              "id": 16688,
+              "name": "Magister's Robes"
+            },
+            {
+              "id": 16690,
+              "name": "Devout Robe"
+            },
+            {
+              "id": 16700,
+              "name": "Dreadmist Robe"
+            },
+            {
+              "id": 15730,
+              "name": "Pattern: Red Dragonscale Breastplate"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5941180,
+      "name": "Wailing Caverns",
+      "type": "Dungeon",
+      "level": "15-24",
+      "minLevel": 15,
+      "maxLevel": 24,
+      "location": "Northern Barrens",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1413,
+        "x": 0.46,
+        "y": 0.364
+      },
+      "bosses": [
+        {
+          "name": "Lord Cobrahn",
+          "npcID": 3669,
+          "loot": [
+            {
+              "id": 6460,
+              "name": "Cobrahn's Grasp"
+            },
+            {
+              "id": 10410,
+              "name": "Leggings of the Fang"
+            },
+            {
+              "id": 6465,
+              "name": "Robe of the Moccasin"
+            }
+          ]
+        },
+        {
+          "name": "Lady Anacondra",
+          "npcID": 3671,
+          "loot": [
+            {
+              "id": 10412,
+              "name": "Belt of the Fang"
+            },
+            {
+              "id": 5404,
+              "name": "Serpent's Shoulders"
+            },
+            {
+              "id": 6446,
+              "name": "Snakeskin Bag"
+            },
+            {
+              "id": 273088,
+              "name": "Snake Eye Kaleidoscope"
+            }
+          ]
+        },
+        {
+          "name": "Kresh",
+          "npcID": 3653,
+          "loot": [
+            {
+              "id": 13245,
+              "name": "Kresh's Back"
+            },
+            {
+              "id": 6447,
+              "name": "Worn Turtle Shell Shield"
+            },
+            {
+              "id": 273084,
+              "name": "Cloak of Hermitic Bliss"
+            }
+          ]
+        },
+        {
+          "name": "Lord Pythas",
+          "npcID": 3670,
+          "loot": [
+            {
+              "id": 6472,
+              "name": "Stinging Viper"
+            },
+            {
+              "id": 6473,
+              "name": "Armor of the Fang"
+            },
+            {
+              "id": 273089,
+              "name": "Slither Cord"
+            }
+          ]
+        },
+        {
+          "name": "Skum",
+          "npcID": 3674,
+          "loot": [
+            {
+              "id": 6449,
+              "name": "Glowing Lizardscale Cloak"
+            },
+            {
+              "id": 6448,
+              "name": "Tail Spike"
+            },
+            {
+              "id": 273137,
+              "name": "Skum's Bucket"
+            }
+          ]
+        },
+        {
+          "name": "Lord Serpentis",
+          "npcID": 3673,
+          "loot": [
+            {
+              "id": 6469,
+              "name": "Venomstrike"
+            },
+            {
+              "id": 5970,
+              "name": "Serpent Gloves"
+            },
+            {
+              "id": 10411,
+              "name": "Footpads of the Fang"
+            },
+            {
+              "id": 6459,
+              "name": "Savage Trodders"
+            }
+          ]
+        },
+        {
+          "name": "Verdan the Everliving",
+          "npcID": 5775,
+          "loot": [
+            {
+              "id": 6630,
+              "name": "Seedcloud Buckler"
+            },
+            {
+              "id": 6631,
+              "name": "Living Root"
+            },
+            {
+              "id": 6629,
+              "name": "Sporid Cape"
+            }
+          ]
+        },
+        {
+          "name": "Mutanus the Devourer",
+          "npcID": 3654,
+          "loot": [
+            {
+              "id": 6461,
+              "name": "Slime-encrusted Pads"
+            },
+            {
+              "id": 6627,
+              "name": "Mutant Scale Breastplate"
+            },
+            {
+              "id": 6463,
+              "name": "Deep Fathom Ring"
+            },
+            {
+              "id": 10441,
+              "name": "Glowing Shard"
+            }
+          ]
+        },
+        {
+          "name": "Deviate Faerie Dragon",
+          "npcID": 5912,
+          "loot": [
+            {
+              "id": 5243,
+              "name": "Firebelcher"
+            },
+            {
+              "id": 6632,
+              "name": "Feyscale Cloak"
+            },
+            {
+              "id": 252781,
+              "name": "Pattern: Stormrider's Leather Gloves"
+            }
+          ]
+        },
+        {
+          "name": "Trash Drops",
+          "npcID": null,
+          "loot": [
+            {
+              "id": 10413,
+              "name": "Gloves of the Fang"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 206342569,
+      "name": "Zul'Farrak",
+      "type": "Dungeon",
+      "level": "43-50",
+      "minLevel": 43,
+      "maxLevel": 50,
+      "location": "Tanaris",
+      "source": "ForeverDungeonJournal installed snapshot",
+      "entrance": {
+        "mapID": 1446,
+        "x": 0.387,
+        "y": 0.2
+      },
+      "bosses": [
+        {
+          "name": "Antu'sul",
+          "npcID": 8127,
+          "loot": [
+            {
+              "id": 9640,
+              "name": "Vice Grips"
+            },
+            {
+              "id": 9639,
+              "name": "The Hand of Antu'sul"
+            }
+          ]
+        },
+        {
+          "name": "Witch Doctor Zum'rah",
+          "npcID": 7271,
+          "loot": [
+            {
+              "id": 18082,
+              "name": "Zum'rah's Vexing Cane"
+            }
+          ]
+        },
+        {
+          "name": "Shadowpriest Sezz'ziz",
+          "npcID": 7275,
+          "loot": [
+            {
+              "id": 9470,
+              "name": "Bad Mojo Mask"
+            },
+            {
+              "id": 9473,
+              "name": "Jinxed Hoodoo Skin"
+            },
+            {
+              "id": 9474,
+              "name": "Jinxed Hoodoo Kilt"
+            },
+            {
+              "id": 9475,
+              "name": "Diabolic Skiver"
+            }
+          ]
+        },
+        {
+          "name": "Gahz'rilla",
+          "npcID": 7273,
+          "loot": [
+            {
+              "id": 9467,
+              "name": "Gahz'rilla Fang"
+            },
+            {
+              "id": 9469,
+              "name": "Gahz'rilla Scale Armor"
+            }
+          ]
+        },
+        {
+          "name": "Zerillis",
+          "npcID": 10082,
+          "loot": [
+            {
+              "id": 12470,
+              "name": "Sandstalker Ankleguards"
+            }
+          ]
+        },
+        {
+          "name": "Sandarr Dunereaver",
+          "npcID": 10080,
+          "loot": []
+        },
+        {
+          "name": "Dustwraith",
+          "npcID": 10081,
+          "loot": []
+        },
+        {
+          "name": "Ruuzlu",
+          "npcID": 7797,
+          "loot": []
+        },
+        {
+          "name": "Chief Ukorz Sandscalp",
+          "npcID": 7267,
+          "loot": [
+            {
+              "id": 9476,
+              "name": "Big Bad Pauldrons"
+            },
+            {
+              "id": 9477,
+              "name": "The Chief's Enforcer"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

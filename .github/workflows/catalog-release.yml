@@ -1,0 +1,22 @@
+name: Prepare catalog release
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - shell: pwsh
+        run: ./tools/package-release.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AzerMind-with-local-catalog
+          path: releases/*.zip

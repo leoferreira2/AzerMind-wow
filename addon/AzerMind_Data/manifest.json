@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "layout": 2,
+  "flavor": "Forever",
+  "version": "1.0.12",
+  "source": "QuestieDB",
+  "commit": "4d31c10394b11bd133069ecf1662062cdf4d8691",
+  "sha256": "d605067dcba3ea23f665756fd13d31a01a2bdb7a238dad705ca563da8171aa7f",
+  "counts": {
+    "items": 21442,
+    "quests": 5233,
+    "npcs": 13417,
+    "objects": 7045
+  },
+  "coverage": {
+    "rarity": false,
+    "icons": false,
+    "inventorySlot": false,
+    "itemStats": false,
+    "dropRates": false,
+    "craftingRecipes": false,
+    "liveAvailability": false,
+    "dynamicCorrections": false
+  },
+  "warnings": {
+    "missingQuestReferences": 2,
+    "itemsWithoutSources": 9210
+  }
+}

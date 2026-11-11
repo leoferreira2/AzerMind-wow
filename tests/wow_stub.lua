@@ -1,5 +1,5 @@
 -- A minimal stand-in for the WoW addon environment, enough to load and drive
--- WoWAI.lua outside the game (see addon_test.js). Frames are plain tables:
+-- AzerMind.lua outside the game (see addon_test.js). Frames are plain tables:
 -- capitalized names that aren't listed below resolve to a no-op method, so any
 -- SetFoo/EnableBar call is accepted; lowercase names are ordinary fields.
 --
@@ -12,6 +12,7 @@ STUB = {
 }
 
 local function noop() end
+unpack = unpack or table.unpack -- WoW exposes the Lua 5.1 global; Fengari uses 5.3.
 
 local Methods = {}
 local FrameMT = {
@@ -38,17 +39,24 @@ function Methods.Show(self) self.shown = true end
 function Methods.Hide(self)
 	local was = self.shown
 	self.shown = false
-	if was and self.scripts.OnHide then self.scripts.OnHide(self) end
+	if was then
+        if self.scripts.OnHide then self.scripts.OnHide(self) end
+        for _,hook in ipairs(self.hooks.OnHide or {}) do hook(self) end
+    end
 end
 function Methods.SetShown(self, v) if v then self:Show() else self:Hide() end end
 function Methods.IsShown(self) return self.shown end
 function Methods.IsVisible(self) return self.shown end
 function Methods.SetText(self, t) self.text = t; table.insert(STUB.texts, tostring(t)) end
 function Methods.GetText(self) return self.text or "" end
+function Methods.SetChecked(self,value) self.checked=value and true or false end
+function Methods.GetChecked(self) return self.checked or false end
 function Methods.GetName(self) return self.name end
 function Methods.GetParent(self) return self.parent end
 function Methods.GetWidth(self) return self.width or 400 end
 function Methods.GetHeight(self) return self.height or 300 end
+function Methods.GetFrameLevel(self) return self.frameLevel or 1 end
+function Methods.SetFrameLevel(self, value) self.frameLevel = value end
 function Methods.SetSize(self, w, h) self.width, self.height = w, h end
 function Methods.SetWidth(self, w) self.width = w end
 function Methods.SetHeight(self, h) self.height = h end
@@ -62,6 +70,8 @@ function Methods.SetPoint(self, point, rel, relPoint, x, y)
 	self.x, self.y = x or 0, y or 0
 end
 function Methods.GetVerticalScrollRange(self) return 0 end
+function Methods.GetVerticalScroll(self) return self.verticalScroll or 0 end
+function Methods.SetVerticalScroll(self,value) self.verticalScroll=value end
 function Methods.CreateTexture(self, name, layer)
 	local t = NewObject("Texture", name, self)
 	table.insert(self.textures, t)
@@ -180,7 +190,7 @@ function SetItemRef() end
 ChatFrameUtil = { InsertLink = function(text) return false end }
 function ChatEdit_InsertLink(text) return ChatFrameUtil.InsertLink(text) end
 
--- The character, for the game context (WoWAI.GameContext).
+-- The character, for the game context (AzerMind.GameContext).
 function GetBuildInfo() return "1.60.1", "69913", "Sep 1 2026", 16001 end
 function UnitName(unit) if unit == "player" then return "Testchar" end end
 function GetRealmName() return "Test Realm" end

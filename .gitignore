@@ -8,6 +8,7 @@ bridge/tmp/
 
 # tooling
 node_modules/
+bridge/model-catalog-cache.json
 tests/tmp/
 
 # OS / local artifacts

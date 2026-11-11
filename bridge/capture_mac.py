@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """macOS counterpart of capture.ps1 / capture_x11.py: screen-captures the
-top-left corner of the native WoW: Forever client and decodes the WoWAI pixel
+top-left corner of the native WoW: Forever client and decodes the AzerMind pixel
 strip (see Codec.lua in the addon). Prints one JSON line per new message to
 stdout, with the same {info|warn|error|id,text} contract as the other capture
 scripts. Started by bridge.js.
@@ -27,7 +27,7 @@ import zlib
 p = argparse.ArgumentParser()
 p.add_argument("--cell", type=int, default=4)
 p.add_argument("--cells", type=int, default=200)
-p.add_argument("--max-rows", type=int, default=48)
+p.add_argument("--max-rows", type=int, default=96)
 p.add_argument("--interval-ms", type=int, default=250)
 p.add_argument("--process-name", default="World of Warcraft")
 p.add_argument("--window-name", default="")

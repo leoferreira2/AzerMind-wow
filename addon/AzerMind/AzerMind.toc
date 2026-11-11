@@ -1,0 +1,20 @@
+## Interface: 16001
+## Title: AzerMind
+## Notes: Talk to Claude Code, Codex, Grok, Antigravity or Hermes from inside the game, one session per chat; ready-made macros and map routes from the agent. Needs the companion bridge (see README).
+## Author: AzerMind contributors; original wow-ai by chelinho139
+## Version: 0.5.0
+## SavedVariables: AzerMindDB, AzerMindMapDB, AzerMindItemsDB
+## OptionalDeps: AzerMind_Nodes
+
+Codec.lua
+Inbox.lua
+Theme.lua
+AzerMind.lua
+Links.lua
+Settings.lua
+Quests.lua
+Catalog.lua
+Items.lua
+InstancesData.lua
+Instances.lua
+Map.lua

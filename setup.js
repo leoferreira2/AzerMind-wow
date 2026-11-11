@@ -20,7 +20,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const ROOT = __dirname;
-const ADDON_SRC = path.join(ROOT, 'addon', 'WoWAI');
+const ADDON_SRC = path.join(ROOT, 'addon', 'AzerMind');
 const BRIDGE = path.join(ROOT, 'bridge');
 const CONFIG = path.join(BRIDGE, 'config.json');
 const EXAMPLE = path.join(BRIDGE, 'config.example.json');
@@ -68,7 +68,7 @@ function findClient() {
   }
   if (current) roots.unshift(path.dirname(current));
   // Tests search a fake install tree and nothing else, never a real game.
-  if (process.env.WOWAI_TEST_WOW_ROOT) roots = [process.env.WOWAI_TEST_WOW_ROOT];
+  if (process.env.AZERMIND_TEST_WOW_ROOT) roots = [process.env.AZERMIND_TEST_WOW_ROOT];
   for (const root of roots) {
     // The beta folder can outlive the beta: Forever goes first.
     for (const flavor of ['_forever_', '_classic_beta_', '_retail_', '_classic_era_', '_classic_']) {
@@ -99,13 +99,35 @@ function findAccount(client) {
 // carry that over (renaming the global inside), then remove the old addon and
 // its slot pool: the game only needs one of each, and the old one would still
 // answer /ai, /r and the shift-click hook.
+function migrateWoWAIInstall(client, account) {
+  const addons = path.join(client, 'Interface', 'AddOns');
+  if (account) {
+    const savedDir = path.join(client, 'WTF', 'Account', account, 'SavedVariables');
+    const oldSaved = path.join(savedDir, 'WoWAI.lua');
+    const newSaved = path.join(savedDir, 'AzerMind.lua');
+    if (fs.existsSync(oldSaved) && !fs.existsSync(newSaved)) {
+      const data = fs.readFileSync(oldSaved, 'utf8')
+        .replace(/\bWoWAI[A-Za-z]*DB(?=\s*=)/g, name => name.replace('WoWAI', 'AzerMind'))
+        .replace(/WOWAI_OPEN_CHAT/g, 'AZERMIND_OPEN_CHAT').replace(/WOWAI_NEW_CHAT/g, 'AZERMIND_NEW_CHAT');
+      fs.writeFileSync(newSaved, data);
+      console.log('migrate  : copied WoW AI chats, settings and map data to AzerMind; original saved data kept');
+    }
+  }
+  // Disable legacy addon entry points without deleting their files or user data.
+  for (const name of fs.existsSync(addons) ? fs.readdirSync(addons) : []) {
+    if (!/^WoWAI(?:$|_)/.test(name)) continue;
+    const toc = path.join(addons, name, name + '.toc');
+    if (fs.existsSync(toc)) fs.renameSync(toc, toc + '.disabled');
+  }
+}
+
 function migrateOldInstall(client, account) {
   const addons = path.join(client, 'Interface', 'AddOns');
   const savedDir = path.join(client, 'WTF', 'Account', account, 'SavedVariables');
   const oldSaved = path.join(savedDir, 'WoWClaude.lua');
-  const newSaved = path.join(savedDir, 'WoWAI.lua');
+  const newSaved = path.join(savedDir, 'AzerMind.lua');
   if (fs.existsSync(oldSaved) && !fs.existsSync(newSaved)) {
-    const src = fs.readFileSync(oldSaved, 'utf8').replace(/^WoWClaudeDB\s*=/m, 'WoWAIDB =');
+    const src = fs.readFileSync(oldSaved, 'utf8').replace(/^WoWClaudeDB\s*=/m, 'AzerMindDB =');
     fs.writeFileSync(newSaved, src);
     console.log(`migrate  : chats and settings copied from ${path.basename(oldSaved)} to ${path.basename(newSaved)}`);
   }
@@ -120,7 +142,7 @@ function migrateOldInstall(client, account) {
 }
 
 function copyAddon(client) {
-  const dest = path.join(client, 'Interface', 'AddOns', 'WoWAI');
+  const dest = path.join(client, 'Interface', 'AddOns', 'AzerMind');
   fs.mkdirSync(dest, { recursive: true });
   let copied = 0;
   for (const f of fs.readdirSync(ADDON_SRC)) {
@@ -128,6 +150,9 @@ function copyAddon(client) {
     if (f === 'Inbox.lua' && fs.existsSync(target)) continue; // the bridge owns it once running
     fs.copyFileSync(path.join(ADDON_SRC, f), target);
     copied++;
+  }
+  for (const name of fs.readdirSync(path.join(ROOT,'addon')).filter(n=>/^AzerMind_Data(?:_[A-Za-z]+)?$/.test(n))) {
+    fs.cpSync(path.join(ROOT,'addon',name), path.join(client,'Interface','AddOns',name), {recursive:true});
   }
   return { dest, copied };
 }
@@ -137,12 +162,12 @@ function copyAddon(client) {
 // to the codex and grok blocks from the example. Everything else is kept.
 function upgradeConfig(cfg, example) {
   const notes = [];
-  if (/WoWClaude/.test(cfg.inboxFile || '')) {
-    cfg.inboxFile = path.join(cfg.addonDir, 'WoWAI', 'Inbox.lua');
+  if (/WoWClaude|WoWAI/.test(cfg.inboxFile || '')) {
+    cfg.inboxFile = path.join(cfg.addonDir, 'AzerMind', 'Inbox.lua');
     notes.push('inboxFile');
   }
-  if (/WoWClaude\.lua$/.test(cfg.savedVariablesFile || '')) {
-    cfg.savedVariablesFile = cfg.savedVariablesFile.replace(/WoWClaude\.lua$/, 'WoWAI.lua');
+  if (/(?:WoWClaude|WoWAI)\.lua$/.test(cfg.savedVariablesFile || '')) {
+    cfg.savedVariablesFile = cfg.savedVariablesFile.replace(/(?:WoWClaude|WoWAI)\.lua$/, 'AzerMind.lua');
     notes.push('savedVariablesFile');
   }
   if (!cfg.agents) {
@@ -160,7 +185,7 @@ function upgradeConfig(cfg, example) {
 }
 
 function savedVariablesFile(client, account) {
-  return account ? path.join(client, 'WTF', 'Account', account, 'SavedVariables', 'WoWAI.lua') : '';
+  return account ? path.join(client, 'WTF', 'Account', account, 'SavedVariables', 'AzerMind.lua') : '';
 }
 
 // The game exe without .exe, as the capture looks for it.
@@ -181,7 +206,7 @@ function processNameOf(client) {
 
 function pointAtClient(cfg, client, account) {
   cfg.addonDir = path.join(client, 'Interface', 'AddOns');
-  cfg.inboxFile = path.join(cfg.addonDir, 'WoWAI', 'Inbox.lua');
+  cfg.inboxFile = path.join(cfg.addonDir, 'AzerMind', 'Inbox.lua');
   cfg.savedVariablesFile = savedVariablesFile(client, account);
   const processName = processNameOf(client);
   if (processName) cfg.capture = { ...cfg.capture, processName };
@@ -231,12 +256,13 @@ try {
   console.log(`client   : ${client}`);
   const account = findAccount(client);
   console.log(`account  : ${account || 'none yet (the game creates it at your first login; the bridge picks it up then)'}`);
+  migrateWoWAIInstall(client, account);
   if (account) migrateOldInstall(client, account);
   const { dest, copied } = copyAddon(client);
   console.log(`addon    : ${copied} file(s) -> ${dest}`);
   const cfg = writeConfig(client, account);
-  console.log(`project  : ${cfg.defaultCwd}  (change with /wow-ai cd in game, or defaultCwd in config.json)`);
-  console.log(`agent    : ${cfg.agent} by default (change with /wow-ai agent in game, or "agent" in config.json)`);
+  console.log(`project  : ${cfg.defaultCwd}  (change with /azermind cd in game, or defaultCwd in config.json)`);
+  console.log(`agent    : ${cfg.agent} by default (change with /azermind agent in game, or "agent" in config.json)`);
   console.log(agentReport(cfg));
   console.log('slots    : building the reply-slot pool and signal files...');
   const r = spawnSync(process.execPath, [path.join(BRIDGE, 'install-slots.js')], { stdio: 'inherit' });
@@ -244,9 +270,9 @@ try {
   console.log(`
 Done. Next:
   1. Fully quit and relaunch World of Warcraft (it only discovers new addon files at launch).
-  2. Enable "WoW AI" at the character select AddOns screen (the WoW AI slot ### entries stay enabled).
+  2. Enable "AzerMind" at the character select AddOns screen (the AzerMind slot ### entries stay enabled).
   3. Start the bridge:  npm start   (in this terminal${process.platform === 'win32' ? '; bridge\\start-window.cmd opens its own window' : '; on Linux keep the game borderless/windowed and check the capture with: npm run probe'})
-  4. In game:  /wow-ai
+  4. In game:  /azermind
 `);
 } catch (e) {
   console.error('setup failed:', e.message);
