@@ -111,5 +111,28 @@ for (const t of cases) {
     console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  id=${t.id}  bytes=${Buffer.byteLength(t.payload)}  cells=${cells.length}  rows=${Math.ceil(cells.length / CELLS)}  noise=±${t.jitter} gamma=${t.gamma}` + (ok ? '' : `\n   got ${JSON.stringify(res).slice(0, 200)}`));
   }
 }
+
+const corruptChecksum = encodeWithLua(21, 'checksum');
+corruptChecksum[16] ^= 1; // Flip a payload bit after the six-byte header.
+const corruptMagic = encodeWithLua(22, 'magic');
+corruptMagic[0] ^= 1;
+const invalid = [
+  { name: 'checksum', cells: corruptChecksum, error: 'checksum' },
+  { name: 'magic', cells: corruptMagic, error: 'no valid strip in image' },
+  { name: 'length', cells: encodeWithLua(23, 'x'.repeat(7200)).slice(0, CELLS), error: 'length' },
+];
+if (process.platform === 'win32') {
+  invalid.push({ name: 'truncated', cells: encodeWithLua(24, 'x'.repeat(72)).slice(0, CELLS), error: 'truncated' });
+}
+for (const t of invalid) {
+  const file = path.join(TMP, `strip_${t.name}.png`);
+  fs.writeFileSync(file, render(t.cells, 0, 1));
+  for (const [name, res] of decode(file)) {
+    total++;
+    const ok = res.error === t.error && res.id === undefined && res.text === undefined;
+    if (ok) pass++;
+    console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}  rejects ${t.name}` + (ok ? '' : `\n   got ${JSON.stringify(res).slice(0, 200)}`));
+  }
+}
 console.log(pass === total ? '>>> CODEC ROUND-TRIP PASS' : '>>> CODEC ROUND-TRIP FAIL');
 process.exit(pass === total ? 0 : 1);
