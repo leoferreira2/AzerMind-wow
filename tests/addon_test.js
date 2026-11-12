@@ -14,6 +14,26 @@ const { lua, lauxlib, lualib, to_luastring, to_jsstring } = fengari;
 const ADDON = path.join(__dirname, '..', 'addon', 'AzerMind');
 const CELLS_PER_ROW = 200;
 
+test('send attaches per-question addon evidence resolved before tooltip expansion',()=>{
+  const vm=newVM(); login(vm); connect(vm);
+  vm.run(`
+    AzerMind.GearQuestionContext=function(text) RAW_GEAR_QUERY=text; return "\\n\\n--- Addon gear observations ---\\nFixture item 123 from boss." end
+    AzerMind.ExpandLinks=function(text) return text.." [expanded tooltip]",1 end
+    AzerMind.Send("Vou RFD: GearQuest?")
+    SENT_TEXT=AzerMindDB.chats[1].history[#AzerMindDB.chats[1].history].text
+  `);
+  assert.equal(vm.evaluate('RAW_GEAR_QUERY'),'Vou RFD: GearQuest?');
+  assert.match(vm.evaluate('SENT_TEXT'),/\[expanded tooltip\][\s\S]*Fixture item 123 from boss/);
+  assert.equal(Buffer.from(vm.evaluate('AzerMindDB.outbox.text'),'hex').toString(),vm.evaluate('SENT_TEXT'));
+});
+
+test('an integration failure does not block an ordinary outgoing question',()=>{
+  const vm=newVM(); login(vm); connect(vm);
+  vm.run('AzerMind.GearQuestionContext=function() error("adapter fault") end; AzerMind.Send("ola")');
+  assert.ok(vm.num('AzerMindDB.chats[1].pendingId')>0);
+  assert.equal(Buffer.from(vm.evaluate('AzerMindDB.outbox.text'),'hex').toString(),'ola');
+});
+
 test('quest location dropdowns cascade in both tabs and preserve hidden selections',()=>{
   const vm=newVM(); login(vm);
   vm.run(`
@@ -136,7 +156,7 @@ function newVM() {
   };
   const num = (expr) => Number(evaluate(expr));
   run(fs.readFileSync(path.join(__dirname, 'wow_stub.lua'), 'utf8'));
-  for (const f of ['Codec.lua', 'Inbox.lua', 'Theme.lua', 'AzerMind.lua', 'Links.lua', 'Settings.lua', 'Quests.lua', 'Catalog.lua', 'Items.lua', 'InstancesData.lua', 'Instances.lua']) run(fs.readFileSync(path.join(ADDON, f), 'utf8'), 'AzerMind');
+  for (const f of ['Codec.lua', 'Inbox.lua', 'Theme.lua', 'AzerMind.lua', 'Links.lua', 'Settings.lua', 'Quests.lua', 'Catalog.lua', 'Items.lua', 'InstancesData.lua', 'Instances.lua', 'GearQuestContext.lua', 'JournalContext.lua', 'GearIntelligence.lua']) run(fs.readFileSync(path.join(ADDON, f), 'utf8'), 'AzerMind');
   return { run, evaluate, num };
 }
 

@@ -25,7 +25,7 @@
     "setup": "node setup.js",
     "start": "node bridge/supervisor.js",
     "slots": "node bridge/install-slots.js",
-    "test": "node tests/order_check.js && node --test tests/bridge_test.js tests/multipart_test.js tests/codex_settings_test.js tests/wowhead_test.js tests/agents_test.js tests/restore_test.js tests/setup_test.js tests/addon_test.js tests/map_test.js tests/map_addon_test.js tests/macro_test.js tests/catalog_test.js && node tests/codec_test.js",
+    "test": "node tests/order_check.js && node --test tests/bridge_test.js tests/multipart_test.js tests/codex_settings_test.js tests/wowhead_test.js tests/agents_test.js tests/restore_test.js tests/setup_test.js tests/addon_test.js tests/gearquest_context_test.js tests/journal_context_test.js tests/gear_intelligence_test.js tests/map_test.js tests/map_addon_test.js tests/macro_test.js tests/catalog_test.js && node tests/codec_test.js",
     "catalog:build": "node tools/build-catalog.js",
     "verify:install": "node tools/verify-installed.js",
     "catalog:test": "node --test tests/catalog_test.js",

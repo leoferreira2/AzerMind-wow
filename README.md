@@ -204,6 +204,8 @@ Catalog indexes and detail modules load separately on demand. Lists are paginate
 
 ## Troubleshooting
 
+GearQuest and Dungeon Journal can supply gear intelligence directly to questions; see [addon integrations](docs/ADDON-INTEGRATIONS.md) for examples, sharing settings and limitations.
+
 | Symptom | Check |
 |---|---|
 | Red light / no answer | Run `npm start`, keep the game visible and inspect `bridge/bridge.log`. |
