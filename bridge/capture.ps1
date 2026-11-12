@@ -36,7 +36,45 @@ public class CapWin {
     public string Error;
   }
 
+  // The first five 3-bit cells come entirely from the 0xC7 0x1A magic.
+  private static readonly int[] MagicCells = { 6, 1, 6, 1, 5 };
+  private const int MinimumChannelContrast = 16;
+
   public static Strip Decode(Bitmap bitmap, int cellSize, int columns, int rows) {
+    Strip strip = DecodeWithThresholds(bitmap, cellSize, columns, rows, 128, 128, 128);
+    if (strip != null) return strip;
+
+    // Screen capture can compress the RGB range. Use the known on/off cells
+    // only after the default threshold misses the magic.
+    int center = (int)Math.Round(cellSize / 2.0);
+    var samples = new Color[MagicCells.Length];
+    for (int i = 0; i < samples.Length; i++) {
+      samples[i] = bitmap.GetPixel((i % columns) * cellSize + center, (i / columns) * cellSize + center);
+    }
+    int red = FindThreshold(samples, 2);
+    int green = FindThreshold(samples, 1);
+    int blue = FindThreshold(samples, 0);
+    if (red < 0 || green < 0 || blue < 0) return null;
+    return DecodeWithThresholds(bitmap, cellSize, columns, rows, red, green, blue);
+  }
+
+  private static int FindThreshold(Color[] samples, int channel) {
+    int brightestOff = 0;
+    int darkestOn = 255;
+    for (int i = 0; i < samples.Length; i++) {
+      int value = (samples[i].ToArgb() >> (channel * 8)) & 255;
+      if ((MagicCells[i] & (1 << channel)) == 0) {
+        brightestOff = Math.Max(brightestOff, value);
+      } else {
+        darkestOn = Math.Min(darkestOn, value);
+      }
+    }
+    if (darkestOn - brightestOff < MinimumChannelContrast) return -1;
+    return (brightestOff + darkestOn) / 2;
+  }
+
+  private static Strip DecodeWithThresholds(Bitmap bitmap, int cellSize, int columns, int rows,
+      int red, int green, int blue) {
     var bytes = new byte[6];
     int count = 0;
     int acc = 0;
@@ -51,12 +89,11 @@ public class CapWin {
       int y = (i / columns) * cellSize + center;
       if (x >= width || y >= height) break;
 
-      // Each channel is either fully on or off. Mid-grey is the threshold.
       Color pixel = bitmap.GetPixel(x, y);
       int value = 0;
-      if (pixel.R >= 128) value |= 4;
-      if (pixel.G >= 128) value |= 2;
-      if (pixel.B >= 128) value |= 1;
+      if (pixel.R >= red) value |= 4;
+      if (pixel.G >= green) value |= 2;
+      if (pixel.B >= blue) value |= 1;
       acc = (acc << 3) | value;
       bits += 3;
       if (bits < 8) continue;
