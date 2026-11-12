@@ -1136,7 +1136,7 @@ AzerMind.ContextCategories = {
 	{"game", "Game and client version"}, {"character", "Name, class, race, level, faction"},
 	{"identity", "Realm and guild (with character)"}, {"zone", "Zone and subzone"},
 	{"position", "Map and exact coordinates"}, {"progress", "Money and XP"},
-	{"talents", "Talent tree totals"}, {"professions", "Professions and levels"},
+	{"talents", "Talent points and ranks"}, {"professions", "Professions and levels"},
 	{"skills", "Other skills and levels"}, {"spells", "Learned spells and ranks"},
 	{"quests", "Active quest IDs and completion"}, {"equipment", "Equipped items and tooltips"},
 }
@@ -1238,22 +1238,7 @@ function AzerMind.GameContext(mode)
 	if #progress > 0 then table.insert(lines, table.concat(progress, "; ")) end
 
 	end -- progress
-	if options.talents then
-	-- Classic-style talent tabs: name, icon, points spent.
-	local tabs = Try(GetNumTalentTabs)
-	if type(tabs) == "number" and tabs > 0 then
-		local parts = {}
-		for i = 1, tabs do
-			local tname, _, points = Try(GetTalentTabInfo, i)
-			if type(tname) == "string" and type(points) == "number" then
-				table.insert(parts, tname .. " " .. points)
-			end
-		end
-		if #parts > 0 then table.insert(lines, "Talents: " .. table.concat(parts, " / ")) end
-	end
-
-	table.insert(lines, "Individual talent ranks: not collected; tree totals only.")
-	end -- talents
+	if options.talents then table.insert(lines, AzerMind.TalentContext()) end
 	if options.professions or options.skills then
 	-- Skill lines under the Professions and Secondary Skills headers.
 	local header, parts, otherSkills = nil, {}, {}

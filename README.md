@@ -116,7 +116,7 @@ Models come from local discovery, configured catalogs and bundled compatibility 
 
 ### Character sharing and guides
 
-Under **Settings > Character**, choose game/client, identity, realm/guild, zone, coordinates, money/XP, talent totals, professions, skills, learned spells, quest IDs and equipped items. Use presets and **Preview**, then **Save**. You can disable automatic sharing; manual attachments still form part of your message. Individual talent ranks and pet abilities are not collected. Missing data and size limits are identified. Disabling sharing does not erase previously sent information.
+Under **Settings > Character**, choose game/client, identity, realm/guild, zone, coordinates, money/XP, talent points and ranks, professions, skills, learned spells, quest IDs and equipped items. Talent sharing includes tree totals, purchased ranks and unspent points when the client provides them. The preview identifies missing or partial data, including when talent edits are pending. Use presets and **Preview**, then **Save**. You can disable automatic sharing. Manual attachments still form part of your message. Previously shared information may still appear in chat history.
 
 Under **Settings > Guide references**, enter one URL per line, up to 20, and save. Links apply to future messages in all conversations independently of character sharing. Agents can read them only if their tools and permissions allow it.
 
